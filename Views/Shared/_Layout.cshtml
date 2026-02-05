@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xidmətə nəzarət və fiziki təhlükəsizlik məlumat bazası</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/datatables/datatables.min.css" />
+    <link href="~/lib/datatables/fixedcolumns.datatables.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <link href="~/lib/select2/select2.min.css" rel="stylesheet" />
+    <link href="~/lib/flatpickr/flatpickr.min.css" rel="stylesheet" />
+    <link href="~/lib/flatpickr/airbnb.css" rel="stylesheet" />
+</head>
+<body>
+    <div id="tableLoader" style="
+                                display:none;
+                                position:fixed;
+                                top:0; left:0;
+                                width:100%; height:100%;
+                                background:rgba(255,255,255,1);
+                                z-index:9999;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                flex-direction:column;
+                                font-size:1.2em;">
+        <div class="spinner-border text-primary mb-3" role="status" style="width:3rem; height:3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div>Yüklənir...</div>
+    </div>
+    <div class="d-flex">
+        <nav id="sidebarMenu" class="d-flex flex-column justify-content-start">
+            <div class="text-center py-3 logo-wrap border-bottom">
+                <a asp-controller="Home" asp-action="Index" class="d-block">
+                    <img src="~/assets/500px-azerbaijan_mod_badge.svg.png" alt="Logo" />
+                </a>
+            </div>
+
+            <div class="sidebar-title">
+                Xidmətə nəzarət və fiziki təhlükəsizlik məlumat bazası
+            </div>
+
+            <div class="text-center py-2 user-info">
+                @if (User?.Identity?.IsAuthenticated ?? false)
+                {
+                    var me = await UserManager.GetUserAsync(User);
+                    <div class="user-name">İstifadəçi: @(me?.FullName ?? User.Identity?.Name)</div>
+
+                    <div class="user-role">
+                        Rol:
+                        @{
+                            var roles = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => char.ToUpper(c.Value[0]) + c.Value.Substring(1));
+                        }
+                        @string.Join(", ", roles)
+                    </div>
+                }
+            </div>
+
+            <ul class="nav px-2 sidebar overflow-auto">
+                <li class="nav-item w-100">
+                    <a class="nav-link @IsControllerActive("Home")" asp-controller="Home" asp-action="Index">
+                        <img src="~/assets/dashboard.svg" />İdarəetmə paneli
+                    </a>
+                </li>
+                <li class="nav-item w-100">
+                    <a class="nav-link @IsControllerActive("SocialMedias")" asp-controller="SocialMedias" asp-action="Index">
+                        <img src="~/assets/social_media.svg" />Sosial şəbəkələr
+                    </a>
+                </li>
+                <li class="nav-item w-100">
+                    <a class="nav-link @IsControllerActive("Narcotics")" asp-controller="Narcotics" asp-action="Index">
+                        <img src="~/assets/pill.svg" />Narkotik vasitələr
+                    </a>
+                </li>
+                <li class="nav-item w-100">
+                    <a class="nav-link @IsControllerActive("UnregisteredDevices")" asp-controller="UnregisteredDevices" asp-action="Index">
+                        <img src="~/assets/unregistered_devices.svg" />Qeydiyyatsız cihazlar
+                    </a>
+                </li>
+                <li class="nav-item w-100">
+                    <a class="nav-link @IsControllerActive("ChaparMobileApps")" asp-controller="ChaparMobileApps" asp-action="Index">
+                        <img src="~/assets/mobile_app.svg" />Çapar mobil tətbiqi
+                    </a>
+                </li>
+                <li class="nav-item w-100">
+                    <a class="nav-link @IsControllerActive("OtherInformations")" asp-controller="OtherInformations" asp-action="Index">
+                        <img src="~/assets/info.svg" />Digər məlumatlar
+                    </a>
+                </li>
+                @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                {
+                    <li class="nav-item w-100">
+                        <a class="nav-link @IsControllerActive("Users")" asp-controller="Users" asp-action="Index">
+                            <img src="~/assets/users.svg" />İstifadəçilər
+                        </a>
+                    </li>
+                    <li class="nav-item w-100">
+                        <a class="nav-link @IsLogPage("AuditLogs")" asp-controller="AppLogs" asp-action="AuditLogs">
+                            <img src="~/assets/logs.svg" />Məlumat dəyişiklikləri loqları
+                        </a>
+                    </li>
+                    <li class="nav-item w-100">
+                        <a class="nav-link @IsLogPage("AuthLogs")" asp-controller="AppLogs" asp-action="AuthLogs">
+                            <img src="~/assets/logs.svg" />Giriş loqları
+                        </a>
+                    </li>
+                    <li class="nav-item w-100">
+                        <a class="nav-link @IsLogPage("EventLogs")" asp-controller="AppLogs" asp-action="EventLogs">
+                            <img src="~/assets/logs.svg" />Hərəkət loqları
+                        </a>
+                    </li>
+                }
+            </ul>
+
+            <div class="p-3 border-top">
+                @if (User?.Identity?.IsAuthenticated ?? false)
+                {
+                    <button type="button" class="btn btn-outline-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#changeMyPasswordModal">
+                        <img src="~/assets/change_password.svg" class="authimg" style="filter: invert(0);" />Şifrəni dəyiş
+                    </button>
+                }
+                <a class="btn btn-danger w-100" href="#" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">
+                    <img src="~/assets/logout.svg" class="authimg" />Çıxış
+                </a>
+                <form id="logoutForm" method="post" asp-controller="Auth" asp-action="Logout" style="display: none;">
+                    @Html.AntiForgeryToken()
+                </form>
+            </div>
+        </nav>
+
+        <div class="flex-grow-1 d-flex flex-column" style="height: 100vh; overflow: hidden; width: 85%">
+            <main class="container-fluid py-4 overflow-auto" style="flex: 1;">
+                @RenderBody()
+
+                <div aria-live="polite" aria-atomic="true" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+                    <div id="liveToast" class="toast" role="alert" data-bs-delay="3000">
+                        <div class="toast-header">
+                            <strong class="me-auto" id="toastTitle">Success</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body" id="toastBody"></div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="changeMyPasswordModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Şifrəni dəyiş</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+
+                            <div class="modal-body" id="changeMyPasswordBody"></div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ləğv et</button>
+                                <button type="button" id="saveMyPasswordBtn" class="btn btn-primary">Yadda saxla</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <footer class="text-center py-3 text-muted">
+                © 2025 - Xidmətə nəzarət və fiziki təhlükəsizlik məlumat bazası
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/flatpickr/flatpickr.min.js"></script>
+    <script src="~/lib/flatpickr/flatpickr_az.js"></script>
+    <script src="~/lib/datatables/datatables.min.js"></script>
+    <script src="~/lib/datatables/datetime-moment.js"></script>
+    <script src="~/lib/datatables/filesaver.min.js"></script>
+    <script src="~/lib/datatables/html-docx.js"></script>
+    <script src="~/lib/select2/select2.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/xnb-export.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
