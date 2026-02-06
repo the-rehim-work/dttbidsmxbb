@@ -8,6 +8,7 @@ namespace dttbidsmxbb.Data
     {
         public DbSet<MilitaryRank> MilitaryRanks { get; set; }
         public DbSet<MilitaryBase> MilitaryBases { get; set; }
+        public DbSet<Executor> Executors { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
