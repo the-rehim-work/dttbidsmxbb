@@ -1,0 +1,27 @@
+@{
+    ViewData["Title"] = "Giriş loqları";
+}
+
+<h4 class="mb-3">Giriş loqları</h4>
+
+<table id="logsTable" class="table table-bordered table-sm" style="font-size: 0.85rem;">
+    <thead>
+        <tr>
+            <th>№</th>
+            <th>İstifadəçi</th>
+            <th>Nəticə</th>
+            <th>IP ünvan</th>
+            <th>Tarix</th>
+        </tr>
+    </thead>
+</table>
+
+@section Scripts {
+    <script>
+        var logConfig = {
+            url: '@Url.Action("LoadAuthLogs", "Logs")',
+            type: 'auth'
+        };
+    </script>
+    <script src="~/js/logs.js" asp-append-version="true"></script>
+}

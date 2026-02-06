@@ -1,0 +1,52 @@
+@{
+    ViewData["Title"] = "Audit loqları";
+}
+
+<h4 class="mb-3">Audit loqları</h4>
+
+<table id="logsTable" class="table table-bordered table-sm" style="font-size: 0.85rem;">
+    <thead>
+        <tr>
+            <th>№</th>
+            <th>İstifadəçi</th>
+            <th>Əməliyyat</th>
+            <th>Cədvəl</th>
+            <th>Qeyd ID</th>
+            <th>Tarix</th>
+            <th>Ətraflı</th>
+        </tr>
+    </thead>
+</table>
+
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dəyişiklik detalları</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Köhnə dəyərlər</h6>
+                        <pre id="oldValues" class="bg-light p-3" style="max-height: 400px; overflow: auto; font-size: 0.8rem;"></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Yeni dəyərlər</h6>
+                        <pre id="newValues" class="bg-light p-3" style="max-height: 400px; overflow: auto; font-size: 0.8rem;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var logConfig = {
+            url: '@Url.Action("LoadAuditLogs", "Logs")',
+            type: 'audit'
+        };
+    </script>
+    <script src="~/js/logs.js" asp-append-version="true"></script>
+}
