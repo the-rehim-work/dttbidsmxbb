@@ -98,6 +98,9 @@ namespace dttbidsmxbb.Models
         [Display(Name = "Qeyd")]
         public string? Note { get; set; }
 
-        public bool IsDeleted { get; set; } = false;
+        public DateTime CreatedAt { get; set; }
+        public DateTime? DeletedAt { get; set; }
+        public DateTime? ModifiedAt { get; set; }
+
     }
 }

@@ -1,0 +1,102 @@
+@{
+    ViewData["Title"] = "Məlumatlar";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Məlumatlar</h4>
+    <div class="d-flex gap-2">
+        <div class="form-check form-switch d-flex align-items-center me-3">
+            <input class="form-check-input" type="checkbox" id="showDeletedToggle" />
+            <label class="form-check-label ms-2" for="showDeletedToggle">Silinmişləri göstər</label>
+        </div>
+        <div class="btn-group">
+            <a asp-controller="Export" asp-action="Excel" class="btn btn-success btn-sm">Excel</a>
+            <a asp-controller="Export" asp-action="Pdf" class="btn btn-danger btn-sm">PDF</a>
+            <a asp-controller="Export" asp-action="Word" class="btn btn-info btn-sm text-white">Word</a>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">İdxal</button>
+        <a asp-controller="Informations" asp-action="Create" class="btn btn-primary btn-sm">Yeni məlumat</a>
+    </div>
+</div>
+
+<table id="informationsTable" class="table table-bordered table-sm w-100" style="font-size: 0.8rem;">
+    <thead>
+        <tr>
+            <th>№</th>
+            <th>Göndərən h/h</th>
+            <th>Hərbi hissə</th>
+            <th>Göndərilmə №</th>
+            <th>Göndərilmə tarixi</th>
+            <th>Daxil olma №</th>
+            <th>Daxil olma tarixi</th>
+            <th>Rütbə</th>
+            <th>Rəsmiləşdirildiyi vəzifə</th>
+            <th>Vəzifə</th>
+            <th>Soyad</th>
+            <th>Ad</th>
+            <th>Ata adı</th>
+            <th>Təyin olunma tarixi</th>
+            <th>Buraxılış forması</th>
+            <th>DTX-a göndərilmə №</th>
+            <th>DTX-a göndərilmə tarixi</th>
+            <th>İcraçı</th>
+            <th>Vərəqə №</th>
+            <th>Vərəqə tarixi</th>
+            <th>İmtina</th>
+            <th>Geri qaytarılma</th>
+            <th>Qeyd</th>
+            <th>Əməliyyatlar</th>
+        </tr>
+    </thead>
+</table>
+
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Məlumatların idxalı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <a asp-controller="Export" asp-action="Template" class="btn btn-outline-primary btn-sm">Şablonu yüklə</a>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Fayl seçin (.xlsx və ya .csv)</label>
+                    <input type="file" id="importFile" class="form-control" accept=".xlsx,.csv" />
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="useAsDbCheck" />
+                    <label class="form-check-label text-danger" for="useAsDbCheck">
+                        Bazanı sıfırla (mövcud məlumatlar silinəcək!)
+                    </label>
+                </div>
+                <div id="importResult" class="d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bağla</button>
+                <button type="button" id="importBtn" class="btn btn-primary">İdxal et</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Silmə təsdiqi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">Bu məlumatı silmək istədiyinizə əminsiniz?</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Xeyr</button>
+                <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Sil</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/information-index.js" asp-append-version="true"></script>
+}

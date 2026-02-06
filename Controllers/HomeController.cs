@@ -1,19 +1,24 @@
 using System.Diagnostics;
 using dttbidsmxbb.Models;
+using dttbidsmxbb.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace dttbidsmxbb.Controllers
 {
-    public class HomeController : Controller
+    [Authorize]
+    public class HomeController(IInformationService informationService) : Controller
     {
         public IActionResult Index()
         {
             return View();
         }
 
-        public IActionResult Privacy()
+        [HttpGet]
+        public async Task<IActionResult> GetDashboardData()
         {
-            return View();
+            var data = await informationService.GetDashboardDataAsync();
+            return Json(data);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

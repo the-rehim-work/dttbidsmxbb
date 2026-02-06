@@ -1,0 +1,68 @@
+@model List<MilitaryBase>
+
+@{
+    ViewData["Title"] = "Hərbi hissələr";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Hərbi hissələr</h4>
+    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#upsertModal" onclick="openCreate()">Yeni hərbi hissə</button>
+</div>
+
+<table id="lookupTable" class="table table-bordered table-sm">
+    <thead>
+        <tr>
+            <th>№</th>
+            <th>Ad</th>
+            <th>Əməliyyatlar</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            <tr>
+                <td>@(i + 1)</td>
+                <td>@Model[i].Name</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="openEdit(@Model[i].Id, '@Model[i].Name.Replace("'", "\\'")') ">Redaktə</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteItem(@Model[i].Id)">Sil</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal fade" id="upsertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="upsertTitle">Yeni hərbi hissə</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId" />
+                <div class="mb-3">
+                    <label class="form-label">Ad</label>
+                    <input type="text" id="nameInput" class="form-control" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ləğv et</button>
+                <button type="button" id="saveBtn" class="btn btn-primary" onclick="save()">Yadda saxla</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var lookupConfig = {
+            createUrl: '@Url.Action("CreateMilitaryBase", "Lookups")',
+            updateUrl: '@Url.Action("UpdateMilitaryBase", "Lookups")',
+            deleteUrl: '@Url.Action("DeleteMilitaryBase", "Lookups")',
+            entityName: 'hərbi hissə',
+            fieldName: 'name'
+        };
+    </script>
+    <script src="~/js/lookups.js" asp-append-version="true"></script>
+}

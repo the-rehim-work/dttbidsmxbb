@@ -1,0 +1,130 @@
+@{
+    ViewData["Title"] = "İstifadəçilər";
+    var users = ViewBag.Users as List<dynamic>;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">İstifadəçilər</h4>
+    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">Yeni istifadəçi</button>
+</div>
+
+<table id="usersTable" class="table table-bordered table-sm">
+    <thead>
+        <tr>
+            <th>№</th>
+            <th>İstifadəçi adı</th>
+            <th>Ad Soyad</th>
+            <th>Rol</th>
+            <th>Əməliyyatlar</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (users != null)
+        {
+            var i = 1;
+            foreach (var u in users)
+            {
+                <tr>
+                    <td>@(i++)</td>
+                    <td>@u.UserName</td>
+                    <td>@u.FullName</td>
+                    <td>@u.Roles</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="openEditUser(@u.Id, '@u.FullName', '@u.Roles')">Redaktə</button>
+                        <button class="btn btn-info btn-sm text-white" onclick="openResetPassword(@u.Id)">Şifrə</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteUser(@u.Id)">Sil</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yeni istifadəçi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">İstifadəçi adı</label>
+                    <input type="text" id="createUserName" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Ad Soyad</label>
+                    <input type="text" id="createFullName" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Şifrə</label>
+                    <input type="password" id="createPassword" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Rol</label>
+                    <select id="createRole" asp-items="@ViewBag.Roles" class="form-select">
+                        <option value="">Seçin...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ləğv et</button>
+                <button type="button" class="btn btn-primary" onclick="createUser()">Yarat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">İstifadəçini redaktə et</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editUserId" />
+                <div class="mb-3">
+                    <label class="form-label">Ad Soyad</label>
+                    <input type="text" id="editFullName" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Rol</label>
+                    <select id="editRole" asp-items="@ViewBag.Roles" class="form-select">
+                        <option value="">Seçin...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ləğv et</button>
+                <button type="button" class="btn btn-primary" onclick="updateUser()">Yenilə</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Şifrəni sıfırla</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="resetUserId" />
+                <div class="mb-3">
+                    <label class="form-label">Yeni şifrə</label>
+                    <input type="password" id="resetNewPassword" class="form-control" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ləğv et</button>
+                <button type="button" class="btn btn-primary" onclick="resetPassword()">Sıfırla</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/users.js" asp-append-version="true"></script>
+}

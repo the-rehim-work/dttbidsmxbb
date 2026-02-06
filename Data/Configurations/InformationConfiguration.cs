@@ -62,8 +62,14 @@ namespace dttbidsmxbb.Data.Configurations
             builder.Property(x => x.Note)
                     .IsRequired(false);
 
-            builder.Property(x => x.IsDeleted)
+            builder.Property(x => x.CreatedAt)
                     .IsRequired();
+
+            builder.Property(x => x.DeletedAt)
+                    .IsRequired(false);
+
+            builder.Property(x => x.ModifiedAt)
+                    .IsRequired(false);
 
             builder.HasOne(x => x.SenderMilitaryBase)
                 .WithMany()

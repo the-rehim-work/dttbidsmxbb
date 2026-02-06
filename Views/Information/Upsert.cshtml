@@ -1,0 +1,204 @@
+@model Information
+@using dttbidsmxbb.Models.Enum
+
+@{
+    var isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Məlumatı redaktə et" : "Yeni məlumat";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">@ViewData["Title"]</h4>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Geri</a>
+</div>
+
+<form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="SenderMilitaryBaseId" class="form-label"></label>
+                    <div class="input-group">
+                        <select asp-for="SenderMilitaryBaseId" asp-items="@ViewBag.MilitaryBases" class="form-select select2-lookup">
+                            <option value="">Seçin...</option>
+                        </select>
+                        <button type="button" class="btn btn-outline-secondary quick-add-btn" data-type="base" data-target="SenderMilitaryBaseId">+</button>
+                    </div>
+                    <span asp-validation-for="SenderMilitaryBaseId" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="MilitaryBaseId" class="form-label"></label>
+                    <div class="input-group">
+                        <select asp-for="MilitaryBaseId" asp-items="@ViewBag.MilitaryBases" class="form-select select2-lookup">
+                            <option value="">Seçin...</option>
+                        </select>
+                        <button type="button" class="btn btn-outline-secondary quick-add-btn" data-type="base" data-target="MilitaryBaseId">+</button>
+                    </div>
+                    <span asp-validation-for="MilitaryBaseId" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="SentSerialNumber" class="form-label"></label>
+                    <input asp-for="SentSerialNumber" class="form-control" />
+                    <span asp-validation-for="SentSerialNumber" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="SentDate" class="form-label"></label>
+                    <input asp-for="SentDate" class="form-control flatpickr-date" />
+                    <span asp-validation-for="SentDate" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="ReceivedSerialNumber" class="form-label"></label>
+                    <input asp-for="ReceivedSerialNumber" class="form-control" />
+                    <span asp-validation-for="ReceivedSerialNumber" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="ReceivedDate" class="form-label"></label>
+                    <input asp-for="ReceivedDate" class="form-control flatpickr-date" />
+                    <span asp-validation-for="ReceivedDate" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="MilitaryRankId" class="form-label"></label>
+                    <div class="input-group">
+                        <select asp-for="MilitaryRankId" asp-items="@ViewBag.MilitaryRanks" class="form-select select2-lookup">
+                            <option value="">Seçin...</option>
+                        </select>
+                        <button type="button" class="btn btn-outline-secondary quick-add-btn" data-type="rank" data-target="MilitaryRankId">+</button>
+                    </div>
+                    <span asp-validation-for="MilitaryRankId" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="RegardingPosition" class="form-label"></label>
+                    <input asp-for="RegardingPosition" class="form-control" />
+                    <span asp-validation-for="RegardingPosition" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Position" class="form-label"></label>
+                    <input asp-for="Position" class="form-control" />
+                    <span asp-validation-for="Position" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Lastname" class="form-label"></label>
+                    <input asp-for="Lastname" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Firstname" class="form-label"></label>
+                    <input asp-for="Firstname" class="form-control" />
+                    <span asp-validation-for="Firstname" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Fathername" class="form-label"></label>
+                    <input asp-for="Fathername" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="AssignmentDate" class="form-label"></label>
+                    <input asp-for="AssignmentDate" class="form-control flatpickr-date" />
+                    <span asp-validation-for="AssignmentDate" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="PrivacyLevel" class="form-label"></label>
+                    <select asp-for="PrivacyLevel" class="form-select">
+                        <option value="">Seçin...</option>
+                        <option value="@((int)PrivacyLevel.TopSecret)">Tam məxfi</option>
+                        <option value="@((int)PrivacyLevel.Secret)">Məxfi</option>
+                    </select>
+                    <span asp-validation-for="PrivacyLevel" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="ExecutorId" class="form-label"></label>
+                    <div class="input-group">
+                        <select asp-for="ExecutorId" asp-items="@ViewBag.Executors" class="form-select select2-lookup">
+                            <option value="">Seçin...</option>
+                        </select>
+                        <button type="button" class="btn btn-outline-secondary quick-add-btn" data-type="executor" data-target="ExecutorId">+</button>
+                    </div>
+                    <span asp-validation-for="ExecutorId" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="SendAwaySerialNumber" class="form-label"></label>
+                    <input asp-for="SendAwaySerialNumber" class="form-control" />
+                    <span asp-validation-for="SendAwaySerialNumber" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="SendAwayDate" class="form-label"></label>
+                    <input asp-for="SendAwayDate" class="form-control flatpickr-date" />
+                    <span asp-validation-for="SendAwayDate" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="FormalizationSerialNumber" class="form-label"></label>
+                    <input asp-for="FormalizationSerialNumber" class="form-control" />
+                    <span asp-validation-for="FormalizationSerialNumber" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="FormalizationDate" class="form-label"></label>
+                    <input asp-for="FormalizationDate" class="form-control flatpickr-date" />
+                    <span asp-validation-for="FormalizationDate" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="RejectionInfo" class="form-label"></label>
+                    <textarea asp-for="RejectionInfo" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="SentBackInfo" class="form-label"></label>
+                    <textarea asp-for="SentBackInfo" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Note" class="form-label"></label>
+                    <textarea asp-for="Note" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer text-end">
+            <a asp-action="Index" class="btn btn-secondary">Ləğv et</a>
+            <button type="submit" class="btn btn-primary">@(isEdit ? "Yenilə" : "Yarat")</button>
+        </div>
+    </div>
+</form>
+
+<div class="modal fade" id="quickAddModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickAddTitle">Əlavə et</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="quickAddType" />
+                <input type="hidden" id="quickAddTarget" />
+                <input type="text" id="quickAddValue" class="form-control" placeholder="Dəyər daxil edin..." />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ləğv et</button>
+                <button type="button" id="quickAddSaveBtn" class="btn btn-primary">Əlavə et</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/information-upsert.js" asp-append-version="true"></script>
+}
