@@ -83,6 +83,12 @@ namespace dttbidsmxbb.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired();
 
+            builder.HasOne(x => x.MilitaryRank)
+                .WithMany()
+                .HasForeignKey(x => x.MilitaryRankId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired();
+
             builder.HasOne(x => x.Executor)
                .WithMany()
                .HasForeignKey(x => x.ExecutorId)

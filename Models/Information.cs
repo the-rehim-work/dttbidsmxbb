@@ -63,7 +63,7 @@ namespace dttbidsmxbb.Models
         [Required(ErrorMessage = "{0} sahəsi mütləqdir.")]
         public DateOnly AssignmentDate { get; set; }
 
-        [Display(Name = "Tələb olunan buraxılışlın forması")]
+        [Display(Name = "Tələb olunan buraxılışın forması")]
         [Required(ErrorMessage = "{0} sahəsi mütləqdir.")]
         public PrivacyLevel PrivacyLevel { get; set; }
 
@@ -83,11 +83,11 @@ namespace dttbidsmxbb.Models
 
         [Display(Name = "Rəsmiləşdirilmiş buraxılış vərəqəsinin nömrəsi")]
         [Required(ErrorMessage = "{0} sahəsi mütləqdir.")]
-        public string FormalizationSerialNumber { get; set; } = string.Empty;
+        public string? FormalizationSerialNumber { get; set; } = string.Empty;
 
         [Display(Name = "Rəsmiləşdirilmiş buraxılış vərəqəsinin tarixi")]
         [Required(ErrorMessage = "{0} sahəsi mütləqdir.")]
-        public DateOnly FormalizationDate { get; set; }
+        public DateOnly? FormalizationDate { get; set; }
 
         [Display(Name = "DTX tərəfindən şəxsin buraxılış sənədlərinə imtina bildirilməsi barədə məlumat")]
         public string? RejectionInfo { get; set; }

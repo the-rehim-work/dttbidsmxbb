@@ -236,7 +236,7 @@ namespace dttbidsmxbb.Services
                 item.SendAwayDate.ToString("dd.MM.yyyy"),
                 item.Executor?.FullInfo ?? "",
                 item.FormalizationSerialNumber,
-                item.FormalizationDate.ToString("dd.MM.yyyy"),
+                item.FormalizationDate?.ToString("dd.MM.yyyy"),
                 item.RejectionInfo ?? "",
                 item.SentBackInfo ?? "",
                 item.Note ?? ""

@@ -1,90 +1,147 @@
 ﻿(function () {
-    const $modal = $('#changeMyPasswordModal');
-    if (!$modal.length) return;
+    'use strict';
 
-    const modal = bootstrap.Modal.getOrCreateInstance($modal[0]);
+    var ns = window.dttbidsmxbb = window.dttbidsmxbb || {};
 
-    $modal.on('shown.bs.modal', function () {
-        $('#currentPassword').focus();
-    });
+    ns.getToken = function () {
+        var el = document.querySelector('input[name="__RequestVerificationToken"]');
+        return el ? el.value : '';
+    };
 
-    $modal.on('hidden.bs.modal', function () {
-        $('#currentPassword, #newPassword, #confirmNewPassword').val('');
-    });
+    ns.toast = function (type, message) {
+        var tpl = document.getElementById('toastTemplate');
+        var container = document.getElementById('toastContainer');
+        if (!tpl || !container) return;
 
-    $('#saveMyPasswordBtn').on('click', async function () {
-        const currentPassword = $('#currentPassword').val();
-        const newPassword = $('#newPassword').val();
-        const confirmNewPassword = $('#confirmNewPassword').val();
+        var clone = tpl.content.cloneNode(true);
+        var toastEl = clone.querySelector('.toast');
+        var icon = clone.querySelector('.toast-icon');
+        var title = clone.querySelector('.toast-title');
+        var body = clone.querySelector('.toast-body');
 
-        if (!currentPassword) {
-            alert('Cari şifrəni daxil edin');
-            return;
+        body.textContent = message;
+
+        switch (type) {
+            case 'success':
+                title.textContent = 'Uğurlu';
+                icon.textContent = '✓';
+                icon.style.color = '#198754';
+                toastEl.style.borderLeft = '4px solid #198754';
+                break;
+            case 'error':
+                title.textContent = 'Xəta';
+                icon.textContent = '✕';
+                icon.style.color = '#dc3545';
+                toastEl.style.borderLeft = '4px solid #dc3545';
+                break;
+            case 'warning':
+                title.textContent = 'Diqqət';
+                icon.textContent = '⚠';
+                icon.style.color = '#ffc107';
+                toastEl.style.borderLeft = '4px solid #ffc107';
+                break;
+            default:
+                title.textContent = 'Məlumat';
+                icon.textContent = 'ℹ';
+                icon.style.color = '#0d6efd';
+                toastEl.style.borderLeft = '4px solid #0d6efd';
+                break;
         }
-        if (!newPassword || newPassword.length < 6) {
-            alert('Yeni şifrə minimum 6 simvol olmalıdır');
-            return;
-        }
-        if (newPassword !== confirmNewPassword) {
-            alert('Yeni şifrələr uyğun gəlmir');
-            return;
-        }
 
-        $(this).prop('disabled', true);
+        container.appendChild(toastEl);
+        var bsToast = new bootstrap.Toast(toastEl);
+        bsToast.show();
 
-        try {
-            const res = await fetch('/Auth/ChangeMyPassword', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({ currentPassword, newPassword })
-            });
-            const json = await res.json();
+        toastEl.addEventListener('hidden.bs.toast', function () {
+            toastEl.remove();
+        });
+    };
 
-            if (json.success) {
-                modal.hide();
-                alert('Şifrə uğurla dəyişdirildi');
-            } else {
-                alert(json.message || 'Xəta baş verdi');
+    ns.post = function (url, data) {
+        data = data || {};
+        data.__RequestVerificationToken = ns.getToken();
+        return $.ajax({
+            url: url,
+            type: 'POST',
+            data: data
+        });
+    };
+
+    if ($.fn.dataTable) {
+        $.extend(true, $.fn.dataTable.defaults, {
+            language: {
+                processing: '<div class="d-flex align-items-center gap-2"><div class="spinner-border spinner-border-sm text-primary"></div> Yüklənir...</div>',
+                lengthMenu: '_MENU_ sətir göstər',
+                zeroRecords: 'Nəticə tapılmadı',
+                info: '_TOTAL_ nəticədən _START_ - _END_ göstərilir',
+                infoEmpty: 'Nəticə yoxdur',
+                infoFiltered: '(cəmi _MAX_ nəticədən)',
+                search: 'Axtar:',
+                paginate: { first: 'İlk', last: 'Son', next: '›', previous: '‹' }
             }
-        } catch {
-            alert('Xəta baş verdi');
-        } finally {
-            $(this).prop('disabled', false);
-        }
-    });
+        });
+    }
 
-    const modalEl = document.getElementById('changeMyPasswordModal');
-    const bodyEl = document.getElementById('changeMyPasswordBody');
+    var pwdModal = document.getElementById('changeMyPasswordModal');
+    var pwdBody = document.getElementById('changeMyPasswordBody');
 
-    if (!modalEl || !bodyEl) return;
+    if (pwdModal && pwdBody) {
+        var pwdHtml =
+            '<div class="mb-3">' +
+            '<label class="form-label"><span class="text-danger">*</span> Cari şifrə</label>' +
+            '<input type="password" id="currentPassword" class="form-control" autocomplete="current-password">' +
+            '</div>' +
+            '<div class="mb-3">' +
+            '<label class="form-label"><span class="text-danger">*</span> Yeni şifrə</label>' +
+            '<input type="password" id="newPassword" class="form-control" autocomplete="new-password">' +
+            '</div>' +
+            '<div class="mb-3">' +
+            '<label class="form-label"><span class="text-danger">*</span> Yeni şifrəni təsdiqlə</label>' +
+            '<input type="password" id="confirmNewPassword" class="form-control" autocomplete="new-password">' +
+            '</div>';
 
-    const template = `
-        <div class="mb-3">
-            <label class="form-label"><span class="text-danger">*</span> Cari şifrə</label>
-            <input type="password" id="currentPassword" class="form-control" autocomplete="current-password">
-        </div>
-        <div class="mb-3">
-            <label class="form-label"><span class="text-danger">*</span> Yeni şifrə</label>
-            <input type="password" id="newPassword" class="form-control" autocomplete="new-password">
-        </div>
-        <div class="mb-3">
-            <label class="form-label"><span class="text-danger">*</span> Yeni şifrəni təsdiqlə</label>
-            <input type="password" id="confirmNewPassword" class="form-control" autocomplete="new-password">
-        </div>
-        <div class="alert alert-danger d-none" id="changePwdErr"></div>
-    `;
+        pwdModal.addEventListener('show.bs.modal', function () {
+            if (!pwdBody.innerHTML.trim()) pwdBody.innerHTML = pwdHtml;
+        });
 
-    modalEl.addEventListener('show.bs.modal', function () {
-        if (!bodyEl.innerHTML.trim()) bodyEl.innerHTML = template;
-        const first = modalEl.querySelector('#currentPassword');
-        if (first) setTimeout(() => first.focus(), 0);
-    });
+        pwdModal.addEventListener('shown.bs.modal', function () {
+            var el = document.getElementById('currentPassword');
+            if (el) el.focus();
+        });
 
-    modalEl.addEventListener('hidden.bs.modal', function () {
-        bodyEl.innerHTML = '';
-    });
+        pwdModal.addEventListener('hidden.bs.modal', function () {
+            pwdBody.innerHTML = '';
+        });
+
+        document.getElementById('saveMyPasswordBtn').addEventListener('click', function () {
+            var cur = document.getElementById('currentPassword').value;
+            var nw = document.getElementById('newPassword').value;
+            var cnf = document.getElementById('confirmNewPassword').value;
+
+            if (!cur) { ns.toast('error', 'Cari şifrəni daxil edin'); return; }
+            if (!nw || nw.length < 4) { ns.toast('error', 'Yeni şifrə minimum 4 simvol olmalıdır'); return; }
+            if (nw !== cnf) { ns.toast('error', 'Yeni şifrələr uyğun gəlmir'); return; }
+
+            var btn = this;
+            btn.disabled = true;
+
+            ns.post('/Auth/ChangeMyPassword', {
+                currentPassword: cur,
+                newPassword: nw,
+                confirmPassword: cnf
+            }).done(function (res) {
+                if (res.success) {
+                    bootstrap.Modal.getInstance(pwdModal).hide();
+                    ns.toast('success', res.message);
+                } else {
+                    ns.toast('error', res.message || 'Xəta baş verdi');
+                }
+            }).fail(function () {
+                ns.toast('error', 'Xəta baş verdi');
+            }).always(function () {
+                btn.disabled = false;
+            });
+        });
+    }
 
 })();

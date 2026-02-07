@@ -18,8 +18,9 @@ namespace dttbidsmxbb.Controllers
         ILogService logService,
         UserManager<AppUser> userManager) : Controller
     {
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            await PopulateViewBagsAsync();
             return View();
         }
 
@@ -28,7 +29,8 @@ namespace dttbidsmxbb.Controllers
         {
             var request = DataTableRequest.Parse(Request.Form);
             var showDeleted = Request.Form["showDeleted"].ToString() == "true";
-            var result = await informationService.GetAllAsync(request, showDeleted);
+            var filter = InformationFilter.Parse(Request.Form);
+            var result = await informationService.GetAllAsync(request, showDeleted, filter);
             return Json(result);
         }
 

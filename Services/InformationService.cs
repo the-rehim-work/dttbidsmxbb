@@ -7,7 +7,7 @@ namespace dttbidsmxbb.Services
 {
     public class InformationService(AppDbContext db) : IInformationService
     {
-        public async Task<DataTableResponse<Information>> GetAllAsync(DataTableRequest request, bool includeDeleted = false)
+        public async Task<DataTableResponse<Information>> GetAllAsync(DataTableRequest request, bool includeDeleted = false, InformationFilter? filter = null)
         {
             var query = db.Informations
                 .Include(x => x.MilitaryBase)
@@ -21,24 +21,27 @@ namespace dttbidsmxbb.Services
 
             var totalCount = await query.CountAsync();
 
+            if (filter is { HasAnyFilter: true })
+                query = ApplyFilters(query, filter);
+
             if (!string.IsNullOrEmpty(request.SearchValue))
             {
                 var search = request.SearchValue.ToLower();
                 query = query.Where(x =>
-                    (x.Firstname != null && x.Firstname.Contains(search, StringComparison.CurrentCultureIgnoreCase)) ||
-                    (x.Lastname != null && x.Lastname.Contains(search, StringComparison.CurrentCultureIgnoreCase)) ||
-                    (x.Fathername != null && x.Fathername.Contains(search, StringComparison.CurrentCultureIgnoreCase)) ||
-                    x.SentSerialNumber.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
-                    x.ReceivedSerialNumber.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
-                    x.SendAwaySerialNumber.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
-                    x.FormalizationSerialNumber.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
-                    x.Position.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
-                    x.RegardingPosition.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
-                    (x.MilitaryBase != null && x.MilitaryBase.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase)) ||
-                    (x.SenderMilitaryBase != null && x.SenderMilitaryBase.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase)) ||
-                    (x.MilitaryRank != null && x.MilitaryRank.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase)) ||
-                    (x.Executor != null && x.Executor.FullInfo.Contains(search, StringComparison.CurrentCultureIgnoreCase)) ||
-                    (x.Note != null && x.Note.Contains(search, StringComparison.CurrentCultureIgnoreCase)));
+                    EF.Functions.Like(x.Firstname.ToLower(), $"%{search}%") ||
+                    (x.Lastname != null && EF.Functions.Like(x.Lastname.ToLower(), $"%{search}%")) ||
+                    (x.Fathername != null && EF.Functions.Like(x.Fathername.ToLower(), $"%{search}%")) ||
+                    EF.Functions.Like(x.SentSerialNumber.ToLower(), $"%{search}%") ||
+                    EF.Functions.Like(x.ReceivedSerialNumber.ToLower(), $"%{search}%") ||
+                    EF.Functions.Like(x.SendAwaySerialNumber.ToLower(), $"%{search}%") ||
+                    EF.Functions.Like(x.FormalizationSerialNumber.ToLower(), $"%{search}%") ||
+                    EF.Functions.Like(x.Position.ToLower(), $"%{search}%") ||
+                    EF.Functions.Like(x.RegardingPosition.ToLower(), $"%{search}%") ||
+                    (x.MilitaryBase != null && EF.Functions.Like(x.MilitaryBase.Name.ToLower(), $"%{search}%")) ||
+                    (x.SenderMilitaryBase != null && EF.Functions.Like(x.SenderMilitaryBase.Name.ToLower(), $"%{search}%")) ||
+                    (x.MilitaryRank != null && EF.Functions.Like(x.MilitaryRank.Name.ToLower(), $"%{search}%")) ||
+                    (x.Executor != null && EF.Functions.Like(x.Executor.FullInfo.ToLower(), $"%{search}%")) ||
+                    (x.Note != null && EF.Functions.Like(x.Note.ToLower(), $"%{search}%")));
             }
 
             var filteredCount = await query.CountAsync();
@@ -77,6 +80,79 @@ namespace dttbidsmxbb.Services
                 RecordsFiltered = filteredCount,
                 Data = data
             };
+        }
+
+        private static IQueryable<Information> ApplyFilters(IQueryable<Information> query, InformationFilter f)
+        {
+            if (f.MilitaryBaseIds.Count > 0)
+                query = query.Where(x => f.MilitaryBaseIds.Contains(x.MilitaryBaseId));
+
+            if (f.SenderMilitaryBaseIds.Count > 0)
+                query = query.Where(x => f.SenderMilitaryBaseIds.Contains(x.SenderMilitaryBaseId));
+
+            if (f.MilitaryRankIds.Count > 0)
+                query = query.Where(x => f.MilitaryRankIds.Contains(x.MilitaryRankId));
+
+            if (f.ExecutorIds.Count > 0)
+                query = query.Where(x => f.ExecutorIds.Contains(x.ExecutorId));
+
+            if (f.PrivacyLevels.Count > 0)
+            {
+                var levels = f.PrivacyLevels.Cast<Models.Enum.PrivacyLevel>().ToList();
+                query = query.Where(x => levels.Contains(x.PrivacyLevel));
+            }
+
+            if (f.SentDateFrom.HasValue)
+                query = query.Where(x => x.SentDate >= f.SentDateFrom.Value);
+            if (f.SentDateTo.HasValue)
+                query = query.Where(x => x.SentDate <= f.SentDateTo.Value);
+
+            if (f.ReceivedDateFrom.HasValue)
+                query = query.Where(x => x.ReceivedDate >= f.ReceivedDateFrom.Value);
+            if (f.ReceivedDateTo.HasValue)
+                query = query.Where(x => x.ReceivedDate <= f.ReceivedDateTo.Value);
+
+            if (f.AssignmentDateFrom.HasValue)
+                query = query.Where(x => x.AssignmentDate >= f.AssignmentDateFrom.Value);
+            if (f.AssignmentDateTo.HasValue)
+                query = query.Where(x => x.AssignmentDate <= f.AssignmentDateTo.Value);
+
+            if (f.SendAwayDateFrom.HasValue)
+                query = query.Where(x => x.SendAwayDate >= f.SendAwayDateFrom.Value);
+            if (f.SendAwayDateTo.HasValue)
+                query = query.Where(x => x.SendAwayDate <= f.SendAwayDateTo.Value);
+
+            if (f.FormalizationDateFrom.HasValue)
+                query = query.Where(x => x.FormalizationDate >= f.FormalizationDateFrom.Value);
+            if (f.FormalizationDateTo.HasValue)
+                query = query.Where(x => x.FormalizationDate <= f.FormalizationDateTo.Value);
+
+            if (f.RejectionInfoNull == "null")
+                query = query.Where(x => x.RejectionInfo == null || x.RejectionInfo == "");
+            else if (f.RejectionInfoNull == "notnull")
+                query = query.Where(x => x.RejectionInfo != null && x.RejectionInfo != "");
+
+            if (f.SentBackInfoNull == "null")
+                query = query.Where(x => x.SentBackInfo == null || x.SentBackInfo == "");
+            else if (f.SentBackInfoNull == "notnull")
+                query = query.Where(x => x.SentBackInfo != null && x.SentBackInfo != "");
+
+            if (f.NoteNull == "null")
+                query = query.Where(x => x.Note == null || x.Note == "");
+            else if (f.NoteNull == "notnull")
+                query = query.Where(x => x.Note != null && x.Note != "");
+
+            if (f.LastnameNull == "null")
+                query = query.Where(x => x.Lastname == null || x.Lastname == "");
+            else if (f.LastnameNull == "notnull")
+                query = query.Where(x => x.Lastname != null && x.Lastname != "");
+
+            if (f.FathernameNull == "null")
+                query = query.Where(x => x.Fathername == null || x.Fathername == "");
+            else if (f.FathernameNull == "notnull")
+                query = query.Where(x => x.Fathername != null && x.Fathername != "");
+
+            return query;
         }
 
         public async Task<Information?> GetByIdAsync(int id)

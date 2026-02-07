@@ -10,8 +10,8 @@
     string ActiveClass(string controller, string? action = null)
     {
         if (action != null)
-            return controllerName == controller && actionName == action ? "active" : "";
-        return controllerName == controller ? "active" : "";
+            return controllerName == controller && actionName == action ? "active-page" : "";
+        return controllerName == controller ? "active-page" : "";
     }
 }
 
@@ -32,12 +32,27 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
 </head>
 <body>
-    <div id="tableLoader" class="app-loader">
-        <div class="spinner-border text-primary mb-3" role="status" style="width:3rem; height:3rem;">
-            <span class="visually-hidden">Yüklənir...</span>
+
+    @if (!controllerName.Contains("Log") && !controllerName.Contains("User") && !controllerName.Contains("Home") && actionName.Contains("Index"))
+    {
+        <div id="tableLoader" style="
+                                    display:none;
+                                    position:fixed;
+                                    top:0; left:0;
+                                    width:100%; height:100%;
+                                    background:rgba(255,255,255,1);
+                                    z-index:9999;
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:center;
+                                    flex-direction:column;
+                                    font-size:1.2em;">
+            <div class="spinner-border text-primary mb-3" role="status" style="width:3rem; height:3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div>Yüklənir...</div>
         </div>
-        <div>Yüklənir...</div>
-    </div>
+    }
 
     <div class="d-flex">
         <nav id="sidebarMenu" class="d-flex flex-column justify-content-start">
@@ -75,7 +90,7 @@
                     </a>
                 </li>
                 <li class="nav-item w-100">
-                    <a class="nav-link @ActiveClass("Information")" asp-controller="Information" asp-action="Index">
+                    <a class="nav-link @ActiveClass("Informations")" asp-controller="Informations" asp-action="Index">
                         <img src="~/assets/info.svg" />Məlumatlar
                     </a>
                 </li>
@@ -144,12 +159,12 @@
             </div>
         </nav>
 
-        <div class="flex-grow-1 d-flex flex-column" style="height: 100vh; overflow: hidden; width: 85%;">
+        <div class="flex-grow-1 d-flex flex-column content-area">
             <main class="container-fluid py-4 overflow-auto" style="flex: 1;">
                 @RenderBody()
             </main>
 
-            <footer class="text-center py-3 text-muted">
+            <footer class="text-center py-3 text-muted" style="font-size: 0.8rem;">
                 © 2025 — Dövlət Sirrinin Mühafizəsi Xidməti Buraxılışlar Bazası
             </footer>
         </div>
@@ -190,6 +205,7 @@
     <script src="~/lib/datatables/datatables.min.js"></script>
     <script src="~/lib/datatables/datetime-moment.js"></script>
     <script src="~/lib/select2/select2.min.js"></script>
+    <script src="~/lib/chartjs/chart.umd.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
