@@ -1,35 +1,4 @@
-﻿function logExportToServer(action, controller, route, callback) {
-    fetch('/Export/LogExport', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-            action: action,
-            controller: controller || document.body.dataset.controller || 'Export',
-            route: route || window.location.pathname
-        })
-    })
-        .then(() => { if (typeof callback === 'function') callback(); })
-        .catch(err => {
-            console.warn('Export log failed:', err);
-            if (typeof callback === 'function') callback();
-        });
-}
-
-function formatDateDDMMYYYY(date) {
-    if (!date) return '';
-    const d = date.getDate().toString().padStart(2, '0');
-    const m = (date.getMonth() + 1).toString().padStart(2, '0');
-    const y = date.getFullYear();
-    return `${d}.${m}.${y}`;
-}
-
-function formatDateYYYYMMDD(date) {
-    if (!date) return '';
-    return date.toISOString().slice(0, 10);
-}
-
-(function () {
+﻿(function () {
     const $modal = $('#changeMyPasswordModal');
     if (!$modal.length) return;
 
@@ -64,7 +33,7 @@ function formatDateYYYYMMDD(date) {
         $(this).prop('disabled', true);
 
         try {
-            const res = await fetch('/Auth/ChangePassword', {
+            const res = await fetch('/Auth/ChangeMyPassword', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

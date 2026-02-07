@@ -20,7 +20,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Xidmətə nəzarət və fiziki təhlükəsizlik məlumat bazası</title>
+    <title>Dövlət Sirrinin Mühafizəsi Xidməti Buraxılışlar Bazası</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/lib/datatables/datatables.min.css" />
@@ -48,7 +48,7 @@
             </div>
 
             <div class="sidebar-title">
-                Xidmətə nəzarət və fiziki təhlükəsizlik məlumat bazası
+                Dövlət Sirrinin Mühafizəsi Xidməti Buraxılışlar Bazası
             </div>
 
             <div class="text-center py-2 user-info">
@@ -75,7 +75,7 @@
                     </a>
                 </li>
                 <li class="nav-item w-100">
-                    <a class="nav-link @ActiveClass("Informations")" asp-controller="Informations" asp-action="Index">
+                    <a class="nav-link @ActiveClass("Information")" asp-controller="Information" asp-action="Index">
                         <img src="~/assets/info.svg" />Məlumatlar
                     </a>
                 </li>
@@ -150,7 +150,7 @@
             </main>
 
             <footer class="text-center py-3 text-muted">
-                © 2025 — Xidmətə nəzarət və fiziki təhlükəsizlik məlumat bazası
+                © 2025 — Dövlət Sirrinin Mühafizəsi Xidməti Buraxılışlar Bazası
             </footer>
         </div>
     </div>
@@ -197,7 +197,7 @@
     {
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                window.xnb.toast('@TempData["ToastType"]', '@TempData["ToastMessage"]');
+                window.dttbidsmxbb.toast('@TempData["ToastType"]', '@TempData["ToastMessage"]');
             });
         </script>
     }

@@ -2,7 +2,399 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<style>
+    .dashboard-container {
+        height: calc(100vh - 120px);
+        display: flex;
+        gap: 16px;
+    }
+
+    .chart-card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .chart-filters {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+        background: #fafafa;
+    }
+
+        .chart-filters .row {
+            margin: 0 -4px;
+        }
+
+            .chart-filters .row > div {
+                padding: 0 4px;
+            }
+
+        .chart-filters label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .chart-filters .form-control,
+        .chart-filters .form-select {
+            height: 32px;
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+
+        .chart-filters .select2-container--default .select2-selection--single {
+            height: 32px;
+            padding: 2px 8px;
+            font-size: 12px;
+        }
+
+            .chart-filters .select2-container--default .select2-selection--single .select2-selection__rendered {
+                line-height: 26px;
+            }
+
+            .chart-filters .select2-container--default .select2-selection--single .select2-selection__arrow {
+                height: 30px;
+            }
+
+    .chart-header {
+        padding: 10px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+    }
+
+        .chart-header h5 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+    .chart-body {
+        flex: 1;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
+    }
+
+        .chart-body canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+    .chart-footer {
+        padding: 10px 16px;
+        border-top: 1px solid #eee;
+        background: #fafafa;
+    }
+
+    .chart-total {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 6px;
+    }
+
+    .legend-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+        .legend-list li {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: #555;
+        }
+
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    .btn-filter {
+        height: 32px;
+        font-size: 12px;
+        padding: 4px 12px;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 6px;
+        align-items: flex-end;
+    }
+</style>
+
+
+
+<script src="~/lib/chartjs/chart.umd.min.js"></script>
+<script src="~/lib/chartjs/chartjs-plugin-datalabels@2.js"></script>
+<script src="~/lib/canvas/html2canvas.min.js"></script>
+<script>
+    Chart.register(ChartDataLabels);
+
+    const COLORS = ['#007C91', '#1E90FF', '#006400', '#D4AF37', '#002147'];
+    const LABELS = ['Sosial şəbəkələr', 'Narkotik vasitələr', 'Qeydiyyatsız cihazlar', 'Çapar mobil tətbiqi', 'Digər məlumatlar'];
+    const LINKS = ['/SocialMedias', '/Narcotics', '/UnregisteredDevices', '/ChaparMobileApps', '/OtherInformations'];
+
+    let doughnutChart = null;
+    let barChart = null;
+    let doughnutDatePicker = null;
+    let barDatePicker = null;
+
+    function initDatePickers() {
+        const config = {
+            mode: 'range',
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd.m.Y',
+            locale: { rangeSeparator: ' — ' },
+            maxDate: 'today'
+        };
+        doughnutDatePicker = flatpickr('#doughnutDateRange', config);
+        barDatePicker = flatpickr('#barDateRange', config);
+    }
+
+    function initSelect2() {
+        $('#doughnutCategory').select2({ width: '100%', allowClear: true, placeholder: 'Hamısı' });
+        $('#doughnutMBase').select2({ width: '100%', allowClear: true, placeholder: 'Hamısı' });
+        $('#doughnutRank').select2({ width: '100%', allowClear: true, placeholder: 'Hamısı' });
+        $('#barCategory').select2({ width: '100%', allowClear: true, placeholder: 'Hamısı' });
+        $('#barMBase').select2({ width: '100%', allowClear: true, placeholder: 'Hamısı' });
+        $('#barRank').select2({ width: '100%', allowClear: true, placeholder: 'Hamısı' });
+    }
+
+    function formatLocalDate(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function getDateRange(picker) {
+        const dates = picker?.selectedDates || [];
+        if (!dates.length) return { from: null, to: null };
+        return {
+            from: formatLocalDate(dates[0]),
+            to: dates[1] ? formatLocalDate(dates[1]) : formatLocalDate(dates[0])
+        };
+    }
+
+    function getDoughnutFilters() {
+        const dates = getDateRange(doughnutDatePicker);
+        return {
+            from: dates.from,
+            to: dates.to,
+            categoryId: $('#doughnutCategory').val() || null,
+            mbaseId: $('#doughnutMBase').val() || null,
+            rankId: $('#doughnutRank').val() || null
+        };
+    }
+
+    function getBarFilters() {
+        const dates = getDateRange(barDatePicker);
+        return {
+            from: dates.from,
+            to: dates.to,
+            categoryId: $('#barCategory').val() || null,
+            mbaseId: $('#barMBase').val() || null,
+            rankId: $('#barRank').val() || null
+        };
+    }
+
+    function buildParams(filters) {
+        const params = new URLSearchParams();
+        Object.entries(filters).forEach(([k, v]) => {
+            if (v !== null && v !== '') params.set(k, v);
+        });
+        return params;
+    }
+
+    async function loadDoughnutChart() {
+        const filters = getDoughnutFilters();
+        const params = buildParams(filters);
+
+        try {
+            const res = await fetch(`/Home/GetOverviewCounts?${params}`);
+            const data = await res.json();
+
+            const values = [data.socialMedia, data.narcotics, data.unregisteredDevices, data.chaparApp, data.otherInfo];
+            const total = values.reduce((a, b) => a + b, 0);
+
+            $('#doughnutTotal').text(`Ümumi: ${total}`);
+
+            const visibleLabels = [];
+            const visibleValues = [];
+            const visibleColors = [];
+            const visibleLinks = [];
+
+            values.forEach((v, i) => {
+                if (v > 0) {
+                    visibleLabels.push(LABELS[i]);
+                    visibleValues.push(v);
+                    visibleColors.push(COLORS[i]);
+                    visibleLinks.push(LINKS[i]);
+                }
+            });
+
+            if (doughnutChart) {
+                doughnutChart.data.labels = visibleLabels;
+                doughnutChart.data.datasets[0].data = visibleValues;
+                doughnutChart.data.datasets[0].backgroundColor = visibleColors;
+                doughnutChart.options.onClick = (evt, els) => {
+                    if (els.length) window.location.href = visibleLinks[els[0].index];
+                };
+                doughnutChart.update();
+            } else {
+                const ctx = document.getElementById('doughnutChart').getContext('2d');
+                doughnutChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: visibleLabels,
+                        datasets: [{
+                            data: visibleValues,
+                            backgroundColor: visibleColors,
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '55%',
+                        plugins: {
+                            legend: { display: false },
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 12 },
+                                formatter: (val, ctx) => {
+                                    const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    return sum > 0 ? Math.round(val / sum * 100) + '%' : '';
+                                }
+                            }
+                        },
+                        onClick: (evt, els) => {
+                            if (els.length) window.location.href = visibleLinks[els[0].index];
+                        },
+                        onHover: (evt, els) => {
+                            evt.native.target.style.cursor = els.length ? 'pointer' : 'default';
+                        }
+                    }
+                });
+            }
+
+            const legend = $('#doughnutLegend').empty();
+            LABELS.forEach((lbl, i) => {
+                const val = values[i];
+                const opacity = val > 0 ? '1' : '0.4';
+                legend.append(`<li style="opacity:${opacity}"><span class="legend-dot" style="background:${COLORS[i]}"></span>${lbl}: ${val}</li>`);
+            });
+
+        } catch (err) {
+            console.error(err);
+            $('#doughnutTotal').text('Xəta baş verdi');
+        }
+    }
+
+    async function loadBarChart() {
+        const params = buildParams(getBarFilters());
+
+        try {
+            const res = await fetch(`/Home/GetMBaseBreakdown?${params}`);
+            const data = await res.json();
+
+            if (barChart) {
+                barChart.data.labels = data.labels;
+                barChart.data.datasets = data.datasets;
+                barChart.update();
+            } else {
+                const ctx = document.getElementById('barChart').getContext('2d');
+                barChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: data.datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            datalabels: { display: false }
+                        },
+                        scales: {
+                            x: { ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 45 } },
+                            y: { beginAtZero: true, ticks: { precision: 0 } }
+                        }
+                    }
+                });
+            }
+
+            const legend = $('#barLegend').empty();
+            data.datasets.forEach(ds => {
+                legend.append(`<li><span class="legend-dot" style="background:${ds.backgroundColor}"></span>${ds.label}</li>`);
+            });
+
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function resetDoughnutFilters() {
+        doughnutDatePicker.clear();
+        $('#doughnutCategory').val(null).trigger('change');
+        $('#doughnutMBase').val(null).trigger('change');
+        $('#doughnutRank').val(null).trigger('change');
+        loadDoughnutChart();
+    }
+
+    function resetBarFilters() {
+        barDatePicker.clear();
+        $('#barCategory').val(null).trigger('change');
+        $('#barMBase').val(null).trigger('change');
+        $('#barRank').val(null).trigger('change');
+        loadBarChart();
+    }
+
+    function exportChart(type) {
+        const card = document.getElementById(type === 'doughnut' ? 'doughnutCard' : 'barCard');
+        const filters = card.querySelector('.chart-filters');
+        filters.style.display = 'none';
+
+        html2canvas(card, { scale: 2, useCORS: true, backgroundColor: '#fff' }).then(canvas => {
+            filters.style.display = '';
+            const link = document.createElement('a');
+            link.download = `statistika_${type}_${formatLocalDate(new Date())}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }).catch(() => {
+            filters.style.display = '';
+        });
+
+        if (typeof logExportToServer === 'function') {
+            logExportToServer('Chart Export', 'Home', window.location.pathname);
+        }
+    }
+
+    $(document).ready(function () {
+        initDatePickers();
+        initSelect2();
+        loadDoughnutChart();
+        loadBarChart();
+    });
+</script>
