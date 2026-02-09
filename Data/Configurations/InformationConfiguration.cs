@@ -42,16 +42,16 @@ namespace dttbidsmxbb.Data.Configurations
                     .IsRequired();
 
             builder.Property(x => x.SendAwaySerialNumber)
-                    .IsRequired();
+                    .IsRequired(false);
 
             builder.Property(x => x.SendAwayDate)
-                    .IsRequired();
+                    .IsRequired(false);
 
             builder.Property(x => x.FormalizationSerialNumber)
-                    .IsRequired();
+                    .IsRequired(false);
 
             builder.Property(x => x.FormalizationDate)
-                    .IsRequired();
+                    .IsRequired(false);
 
             builder.Property(x => x.RejectionInfo)
                     .IsRequired(false);

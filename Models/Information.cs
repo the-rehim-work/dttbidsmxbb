@@ -68,11 +68,9 @@ namespace dttbidsmxbb.Models
         public PrivacyLevel PrivacyLevel { get; set; }
 
         [Display(Name = "Buraxılışın DTX-a göndərilmə nömrəsi")]
-        [Required(ErrorMessage = "{0} sahəsi mütləqdir.")]
         public string? SendAwaySerialNumber { get; set; } = string.Empty;
 
         [Display(Name = "Buraxılışın DTX-a göndərilmə tarixi")]
-        [Required(ErrorMessage = "{0} sahəsi mütləqdir.")]
         public DateOnly? SendAwayDate { get; set; }
 
         [Display(Name = "İcraçı")]
