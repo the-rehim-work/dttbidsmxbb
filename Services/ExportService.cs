@@ -84,7 +84,7 @@ namespace dttbidsmxbb.Services
             return Task.FromResult(bytes);
         }
 
-        public Task<byte[]> ExportToExcelAsync(List<Information> data)
+        public async Task<byte[]> ExportToExcelAsync(List<Information> data)
         {
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Məlumatlar");
@@ -112,14 +112,14 @@ namespace dttbidsmxbb.Services
 
             worksheet.Columns().AdjustToContents();
 
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             workbook.SaveAs(stream);
-            return Task.FromResult(stream.ToArray());
+            return await Task.FromResult(stream.ToArray());
         }
 
-        public Task<byte[]> ExportToWordAsync(List<Information> data)
+        public async Task<byte[]> ExportToWordAsync(List<Information> data)
         {
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             using (var wordDoc = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document, true))
             {
                 var mainPart = wordDoc.AddMainDocumentPart();
@@ -181,10 +181,10 @@ namespace dttbidsmxbb.Services
                 body.AppendChild(sectionProps);
             }
 
-            return Task.FromResult(stream.ToArray());
+            return await Task.FromResult(stream.ToArray());
         }
 
-        public Task<byte[]> GenerateImportTemplateAsync()
+        public async Task<byte[]> GenerateImportTemplateAsync()
         {
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Şablon");
@@ -208,9 +208,9 @@ namespace dttbidsmxbb.Services
 
             worksheet.Columns().AdjustToContents();
 
-            using var stream = new MemoryStream();
+            await using var stream = new MemoryStream();
             workbook.SaveAs(stream);
-            return Task.FromResult(stream.ToArray());
+            return await Task.FromResult(stream.ToArray());
         }
 
         private static string[] GetRowValues(Information item, int rowNum)
@@ -232,11 +232,11 @@ namespace dttbidsmxbb.Services
                 item.Fathername ?? "",
                 item.AssignmentDate.ToString("dd.MM.yyyy"),
                 item.PrivacyLevel == PrivacyLevel.TopSecret ? "Tam məxfi" : "Məxfi",
-                item.SendAwaySerialNumber,
-                item.SendAwayDate.ToString("dd.MM.yyyy"),
+                item.SendAwaySerialNumber ?? "",
+                item.SendAwayDate?.ToString("dd.MM.yyyy") ?? "",
                 item.Executor?.FullInfo ?? "",
-                item.FormalizationSerialNumber,
-                item.FormalizationDate?.ToString("dd.MM.yyyy"),
+                item.FormalizationSerialNumber ?? "",
+                item.FormalizationDate?.ToString("dd.MM.yyyy") ?? "",
                 item.RejectionInfo ?? "",
                 item.SentBackInfo ?? "",
                 item.Note ?? ""

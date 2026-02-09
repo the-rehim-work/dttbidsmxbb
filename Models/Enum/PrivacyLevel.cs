@@ -1,4 +1,6 @@
-﻿namespace dttbidsmxbb.Models.Enum
+﻿using System.ComponentModel;
+
+namespace dttbidsmxbb.Models.Enum
 {
     public enum PrivacyLevel
     {

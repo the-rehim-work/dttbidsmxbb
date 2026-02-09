@@ -21,7 +21,7 @@ namespace dttbidsmxbb.Controllers
         public async Task<IActionResult> Index()
         {
             await PopulateViewBagsAsync();
-            return View();
+            return View(new Information());
         }
 
         [HttpPost]

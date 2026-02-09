@@ -33,8 +33,8 @@ namespace dttbidsmxbb.Services
                     (x.Fathername != null && EF.Functions.Like(x.Fathername.ToLower(), $"%{search}%")) ||
                     EF.Functions.Like(x.SentSerialNumber.ToLower(), $"%{search}%") ||
                     EF.Functions.Like(x.ReceivedSerialNumber.ToLower(), $"%{search}%") ||
-                    EF.Functions.Like(x.SendAwaySerialNumber.ToLower(), $"%{search}%") ||
-                    EF.Functions.Like(x.FormalizationSerialNumber.ToLower(), $"%{search}%") ||
+                    EF.Functions.Like(x.SendAwaySerialNumber != null ? x.SendAwaySerialNumber.ToLower() : "", $"%{search}%") ||
+                    EF.Functions.Like(x.FormalizationSerialNumber != null ? x.FormalizationSerialNumber.ToLower() : "", $"%{search}%") ||
                     EF.Functions.Like(x.Position.ToLower(), $"%{search}%") ||
                     EF.Functions.Like(x.RegardingPosition.ToLower(), $"%{search}%") ||
                     (x.MilitaryBase != null && EF.Functions.Like(x.MilitaryBase.Name.ToLower(), $"%{search}%")) ||
@@ -48,27 +48,29 @@ namespace dttbidsmxbb.Services
 
             query = request.SortColumnIndex switch
             {
-                0 => request.SortDirection == "asc" ? query.OrderBy(x => x.Id) : query.OrderByDescending(x => x.Id),
-                1 => request.SortDirection == "asc" ? query.OrderBy(x => x.SenderMilitaryBase!.Name) : query.OrderByDescending(x => x.SenderMilitaryBase!.Name),
-                2 => request.SortDirection == "asc" ? query.OrderBy(x => x.MilitaryBase!.Name) : query.OrderByDescending(x => x.MilitaryBase!.Name),
-                3 => request.SortDirection == "asc" ? query.OrderBy(x => x.SentSerialNumber) : query.OrderByDescending(x => x.SentSerialNumber),
-                4 => request.SortDirection == "asc" ? query.OrderBy(x => x.SentDate) : query.OrderByDescending(x => x.SentDate),
-                5 => request.SortDirection == "asc" ? query.OrderBy(x => x.ReceivedSerialNumber) : query.OrderByDescending(x => x.ReceivedSerialNumber),
-                6 => request.SortDirection == "asc" ? query.OrderBy(x => x.ReceivedDate) : query.OrderByDescending(x => x.ReceivedDate),
-                7 => request.SortDirection == "asc" ? query.OrderBy(x => x.MilitaryRank!.Name) : query.OrderByDescending(x => x.MilitaryRank!.Name),
-                8 => request.SortDirection == "asc" ? query.OrderBy(x => x.RegardingPosition) : query.OrderByDescending(x => x.RegardingPosition),
-                9 => request.SortDirection == "asc" ? query.OrderBy(x => x.Position) : query.OrderByDescending(x => x.Position),
-                10 => request.SortDirection == "asc" ? query.OrderBy(x => x.Lastname) : query.OrderByDescending(x => x.Lastname),
-                11 => request.SortDirection == "asc" ? query.OrderBy(x => x.Firstname) : query.OrderByDescending(x => x.Firstname),
-                12 => request.SortDirection == "asc" ? query.OrderBy(x => x.Fathername) : query.OrderByDescending(x => x.Fathername),
-                13 => request.SortDirection == "asc" ? query.OrderBy(x => x.AssignmentDate) : query.OrderByDescending(x => x.AssignmentDate),
-                14 => request.SortDirection == "asc" ? query.OrderBy(x => x.PrivacyLevel) : query.OrderByDescending(x => x.PrivacyLevel),
-                15 => request.SortDirection == "asc" ? query.OrderBy(x => x.SendAwaySerialNumber) : query.OrderByDescending(x => x.SendAwaySerialNumber),
-                16 => request.SortDirection == "asc" ? query.OrderBy(x => x.SendAwayDate) : query.OrderByDescending(x => x.SendAwayDate),
-                17 => request.SortDirection == "asc" ? query.OrderBy(x => x.Executor!.FullInfo) : query.OrderByDescending(x => x.Executor!.FullInfo),
-                18 => request.SortDirection == "asc" ? query.OrderBy(x => x.FormalizationSerialNumber) : query.OrderByDescending(x => x.FormalizationSerialNumber),
-                19 => request.SortDirection == "asc" ? query.OrderBy(x => x.FormalizationDate) : query.OrderByDescending(x => x.FormalizationDate),
-                _ => query.OrderByDescending(x => x.Id)
+                0 => request.SortDirection == "asc" ? query.OrderBy(x => x.SenderMilitaryBase!.Name) : query.OrderByDescending(x => x.SenderMilitaryBase!.Name),
+                1 => request.SortDirection == "asc" ? query.OrderBy(x => x.MilitaryBase!.Name) : query.OrderByDescending(x => x.MilitaryBase!.Name),
+                2 => request.SortDirection == "asc" ? query.OrderBy(x => x.SentSerialNumber) : query.OrderByDescending(x => x.SentSerialNumber),
+                3 => request.SortDirection == "asc" ? query.OrderBy(x => x.SentDate) : query.OrderByDescending(x => x.SentDate),
+                4 => request.SortDirection == "asc" ? query.OrderBy(x => x.ReceivedSerialNumber) : query.OrderByDescending(x => x.ReceivedSerialNumber),
+                5 => request.SortDirection == "asc" ? query.OrderBy(x => x.ReceivedDate) : query.OrderByDescending(x => x.ReceivedDate),
+                6 => request.SortDirection == "asc" ? query.OrderBy(x => x.MilitaryRank!.Name) : query.OrderByDescending(x => x.MilitaryRank!.Name),
+                7 => request.SortDirection == "asc" ? query.OrderBy(x => x.RegardingPosition) : query.OrderByDescending(x => x.RegardingPosition),
+                8 => request.SortDirection == "asc" ? query.OrderBy(x => x.Position) : query.OrderByDescending(x => x.Position),
+                9 => request.SortDirection == "asc" ? query.OrderBy(x => x.Lastname) : query.OrderByDescending(x => x.Lastname),
+                10 => request.SortDirection == "asc" ? query.OrderBy(x => x.Firstname) : query.OrderByDescending(x => x.Firstname),
+                11 => request.SortDirection == "asc" ? query.OrderBy(x => x.Fathername) : query.OrderByDescending(x => x.Fathername),
+                12 => request.SortDirection == "asc" ? query.OrderBy(x => x.AssignmentDate) : query.OrderByDescending(x => x.AssignmentDate),
+                13 => request.SortDirection == "asc" ? query.OrderBy(x => x.PrivacyLevel) : query.OrderByDescending(x => x.PrivacyLevel),
+                14 => request.SortDirection == "asc" ? query.OrderBy(x => x.SendAwaySerialNumber) : query.OrderByDescending(x => x.SendAwaySerialNumber),
+                15 => request.SortDirection == "asc" ? query.OrderBy(x => x.SendAwayDate) : query.OrderByDescending(x => x.SendAwayDate),
+                16 => request.SortDirection == "asc" ? query.OrderBy(x => x.Executor!.FullInfo) : query.OrderByDescending(x => x.Executor!.FullInfo),
+                17 => request.SortDirection == "asc" ? query.OrderBy(x => x.FormalizationSerialNumber) : query.OrderByDescending(x => x.FormalizationSerialNumber),
+                18 => request.SortDirection == "asc" ? query.OrderBy(x => x.FormalizationDate) : query.OrderByDescending(x => x.FormalizationDate),
+                19 => request.SortDirection == "asc" ? query.OrderBy(x => x.RejectionInfo) : query.OrderByDescending(x => x.RejectionInfo),
+                20 => request.SortDirection == "asc" ? query.OrderBy(x => x.SentBackInfo) : query.OrderByDescending(x => x.SentBackInfo),
+                21 => request.SortDirection == "asc" ? query.OrderBy(x => x.Note) : query.OrderByDescending(x => x.Note),
+                _ => query.OrderByDescending(x => x.ReceivedDate)
             };
 
             var data = await query.Skip(request.Start).Take(request.Length).ToListAsync();
@@ -117,40 +119,75 @@ namespace dttbidsmxbb.Services
             if (f.AssignmentDateTo.HasValue)
                 query = query.Where(x => x.AssignmentDate <= f.AssignmentDateTo.Value);
 
-            if (f.SendAwayDateFrom.HasValue)
-                query = query.Where(x => x.SendAwayDate >= f.SendAwayDateFrom.Value);
-            if (f.SendAwayDateTo.HasValue)
-                query = query.Where(x => x.SendAwayDate <= f.SendAwayDateTo.Value);
+            if (!string.IsNullOrEmpty(f.FormalizationSentDateNull))
+                query = query.Where(x => f.FormalizationSentDateNull == "null" ? x.SendAwayDate == null : x.SendAwayDate != null);
+            else
+            {
+                if (f.SendAwayDateFrom.HasValue)
+                    query = query.Where(x => x.SendAwayDate >= f.SendAwayDateFrom.Value);
+                if (f.SendAwayDateTo.HasValue)
+                    query = query.Where(x => x.SendAwayDate <= f.SendAwayDateTo.Value);
+            }
 
-            if (f.FormalizationDateFrom.HasValue)
-                query = query.Where(x => x.FormalizationDate >= f.FormalizationDateFrom.Value);
-            if (f.FormalizationDateTo.HasValue)
-                query = query.Where(x => x.FormalizationDate <= f.FormalizationDateTo.Value);
+            if (!string.IsNullOrEmpty(f.FormalizationDateNull))
+                query = query.Where(x => f.FormalizationDateNull == "null" ? x.FormalizationDate == null : x.FormalizationDate != null);
+            else
+            {
+                if (f.FormalizationDateFrom.HasValue)
+                    query = query.Where(x => x.FormalizationDate >= f.FormalizationDateFrom.Value);
+                if (f.FormalizationDateTo.HasValue)
+                    query = query.Where(x => x.FormalizationDate <= f.FormalizationDateTo.Value);
+            }
 
-            if (f.RejectionInfoNull == "null")
-                query = query.Where(x => x.RejectionInfo == null || x.RejectionInfo == "");
-            else if (f.RejectionInfoNull == "notnull")
-                query = query.Where(x => x.RejectionInfo != null && x.RejectionInfo != "");
+            if (!string.IsNullOrEmpty(f.SentSerialNumberQuery))
+                query = query.Where(x => x.SentSerialNumber.Contains(f.SentSerialNumberQuery));
 
-            if (f.SentBackInfoNull == "null")
-                query = query.Where(x => x.SentBackInfo == null || x.SentBackInfo == "");
-            else if (f.SentBackInfoNull == "notnull")
-                query = query.Where(x => x.SentBackInfo != null && x.SentBackInfo != "");
+            if (!string.IsNullOrEmpty(f.ReceivedSerialNumberQuery))
+                query = query.Where(x => x.ReceivedSerialNumber.Contains(f.ReceivedSerialNumberQuery));
 
-            if (f.NoteNull == "null")
-                query = query.Where(x => x.Note == null || x.Note == "");
-            else if (f.NoteNull == "notnull")
-                query = query.Where(x => x.Note != null && x.Note != "");
+            if (!string.IsNullOrEmpty(f.RegardingPositionQuery))
+                query = query.Where(x => x.RegardingPosition.Contains(f.RegardingPositionQuery));
 
-            if (f.LastnameNull == "null")
-                query = query.Where(x => x.Lastname == null || x.Lastname == "");
-            else if (f.LastnameNull == "notnull")
-                query = query.Where(x => x.Lastname != null && x.Lastname != "");
+            if (!string.IsNullOrEmpty(f.PositionQuery))
+                query = query.Where(x => x.Position.Contains(f.PositionQuery));
 
-            if (f.FathernameNull == "null")
-                query = query.Where(x => x.Fathername == null || x.Fathername == "");
-            else if (f.FathernameNull == "notnull")
-                query = query.Where(x => x.Fathername != null && x.Fathername != "");
+            if (!string.IsNullOrEmpty(f.FirstnameQuery))
+                query = query.Where(x => x.Firstname.Contains(f.FirstnameQuery));
+
+            if (!string.IsNullOrEmpty(f.LastnameNull))
+                query = query.Where(x => f.LastnameNull == "null" ? string.IsNullOrEmpty(x.Lastname) : !string.IsNullOrEmpty(x.Lastname));
+            else if (!string.IsNullOrEmpty(f.LastnameQuery))
+                query = query.Where(x => x.Lastname != null && x.Lastname.Contains(f.LastnameQuery));
+
+            if (!string.IsNullOrEmpty(f.FathernameNull))
+                query = query.Where(x => f.FathernameNull == "null" ? string.IsNullOrEmpty(x.Fathername) : !string.IsNullOrEmpty(x.Fathername));
+            else if (!string.IsNullOrEmpty(f.FathernameQuery))
+                query = query.Where(x => x.Fathername != null && x.Fathername.Contains(f.FathernameQuery));
+
+            if (!string.IsNullOrEmpty(f.FormalizationSentSerialNull))
+                query = query.Where(x => f.FormalizationSentSerialNull == "null" ? string.IsNullOrEmpty(x.SendAwaySerialNumber) : !string.IsNullOrEmpty(x.SendAwaySerialNumber));
+            else if (!string.IsNullOrEmpty(f.FormalizationSentSerialQuery))
+                query = query.Where(x => x.SendAwaySerialNumber != null && x.SendAwaySerialNumber.Contains(f.FormalizationSentSerialQuery));
+
+            if (!string.IsNullOrEmpty(f.FormalizationSerialNull))
+                query = query.Where(x => f.FormalizationSerialNull == "null" ? string.IsNullOrEmpty(x.FormalizationSerialNumber) : !string.IsNullOrEmpty(x.FormalizationSerialNumber));
+            else if (!string.IsNullOrEmpty(f.FormalizationSerialQuery))
+                query = query.Where(x => x.FormalizationSerialNumber != null && x.FormalizationSerialNumber.Contains(f.FormalizationSerialQuery));
+
+            if (!string.IsNullOrEmpty(f.RejectionInfoNull))
+                query = query.Where(x => f.RejectionInfoNull == "null" ? string.IsNullOrEmpty(x.RejectionInfo) : !string.IsNullOrEmpty(x.RejectionInfo));
+            else if (!string.IsNullOrEmpty(f.RejectionInfoQuery))
+                query = query.Where(x => x.RejectionInfo != null && x.RejectionInfo.Contains(f.RejectionInfoQuery));
+
+            if (!string.IsNullOrEmpty(f.SentBackInfoNull))
+                query = query.Where(x => f.SentBackInfoNull == "null" ? string.IsNullOrEmpty(x.SentBackInfo) : !string.IsNullOrEmpty(x.SentBackInfo));
+            else if (!string.IsNullOrEmpty(f.SentBackInfoQuery))
+                query = query.Where(x => x.SentBackInfo != null && x.SentBackInfo.Contains(f.SentBackInfoQuery));
+
+            if (!string.IsNullOrEmpty(f.NoteNull))
+                query = query.Where(x => f.NoteNull == "null" ? string.IsNullOrEmpty(x.Note) : !string.IsNullOrEmpty(x.Note));
+            else if (!string.IsNullOrEmpty(f.NoteQuery))
+                query = query.Where(x => x.Note != null && x.Note.Contains(f.NoteQuery));
 
             return query;
         }

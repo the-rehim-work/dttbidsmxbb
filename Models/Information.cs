@@ -69,11 +69,11 @@ namespace dttbidsmxbb.Models
 
         [Display(Name = "Buraxılışın DTX-a göndərilmə nömrəsi")]
         [Required(ErrorMessage = "{0} sahəsi mütləqdir.")]
-        public string SendAwaySerialNumber { get; set; } = string.Empty;
+        public string? SendAwaySerialNumber { get; set; } = string.Empty;
 
         [Display(Name = "Buraxılışın DTX-a göndərilmə tarixi")]
         [Required(ErrorMessage = "{0} sahəsi mütləqdir.")]
-        public DateOnly SendAwayDate { get; set; }
+        public DateOnly? SendAwayDate { get; set; }
 
         [Display(Name = "İcraçı")]
         [Required(ErrorMessage = "{0} sahəsi mütləqdir.")]

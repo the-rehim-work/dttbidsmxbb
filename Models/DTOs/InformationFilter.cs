@@ -21,11 +21,28 @@ namespace dttbidsmxbb.Models.DTOs
         public DateOnly? FormalizationDateFrom { get; set; }
         public DateOnly? FormalizationDateTo { get; set; }
 
+        public string? SentSerialNumberQuery { get; set; }
+        public string? ReceivedSerialNumberQuery { get; set; }
+        public string? RegardingPositionQuery { get; set; }
+        public string? PositionQuery { get; set; }
+        public string? FirstnameQuery { get; set; }
+        public string? LastnameQuery { get; set; }
+        public string? FathernameQuery { get; set; }
+        public string? FormalizationSentSerialQuery { get; set; }
+        public string? FormalizationSerialQuery { get; set; }
+        public string? RejectionInfoQuery { get; set; }
+        public string? SentBackInfoQuery { get; set; }
+        public string? NoteQuery { get; set; }
+
+        public string? LastnameNull { get; set; }
+        public string? FathernameNull { get; set; }
         public string? RejectionInfoNull { get; set; }
         public string? SentBackInfoNull { get; set; }
         public string? NoteNull { get; set; }
-        public string? LastnameNull { get; set; }
-        public string? FathernameNull { get; set; }
+        public string? FormalizationSentSerialNull { get; set; }
+        public string? FormalizationSentDateNull { get; set; }
+        public string? FormalizationSerialNull { get; set; }
+        public string? FormalizationDateNull { get; set; }
 
         public bool HasAnyFilter =>
             MilitaryBaseIds.Count > 0 || SenderMilitaryBaseIds.Count > 0 ||
@@ -35,15 +52,31 @@ namespace dttbidsmxbb.Models.DTOs
             AssignmentDateFrom.HasValue || AssignmentDateTo.HasValue ||
             SendAwayDateFrom.HasValue || SendAwayDateTo.HasValue ||
             FormalizationDateFrom.HasValue || FormalizationDateTo.HasValue ||
+            !string.IsNullOrEmpty(SentSerialNumberQuery) ||
+            !string.IsNullOrEmpty(ReceivedSerialNumberQuery) ||
+            !string.IsNullOrEmpty(RegardingPositionQuery) ||
+            !string.IsNullOrEmpty(PositionQuery) ||
+            !string.IsNullOrEmpty(FirstnameQuery) ||
+            !string.IsNullOrEmpty(LastnameQuery) ||
+            !string.IsNullOrEmpty(FathernameQuery) ||
+            !string.IsNullOrEmpty(FormalizationSentSerialQuery) ||
+            !string.IsNullOrEmpty(FormalizationSerialQuery) ||
+            !string.IsNullOrEmpty(RejectionInfoQuery) ||
+            !string.IsNullOrEmpty(SentBackInfoQuery) ||
+            !string.IsNullOrEmpty(NoteQuery) ||
+            !string.IsNullOrEmpty(LastnameNull) || !string.IsNullOrEmpty(FathernameNull) ||
             !string.IsNullOrEmpty(RejectionInfoNull) || !string.IsNullOrEmpty(SentBackInfoNull) ||
-            !string.IsNullOrEmpty(NoteNull) || !string.IsNullOrEmpty(LastnameNull) ||
-            !string.IsNullOrEmpty(FathernameNull);
+            !string.IsNullOrEmpty(NoteNull) ||
+            !string.IsNullOrEmpty(FormalizationSentSerialNull) ||
+            !string.IsNullOrEmpty(FormalizationSentDateNull) ||
+            !string.IsNullOrEmpty(FormalizationSerialNull) ||
+            !string.IsNullOrEmpty(FormalizationDateNull);
 
         private static readonly string[] DateFormats = ["yyyy-MM-dd", "dd.MM.yyyy", "dd/MM/yyyy"];
 
         public static InformationFilter Parse(IFormCollection form)
         {
-            var filter = new InformationFilter
+            return new InformationFilter
             {
                 MilitaryBaseIds = ParseIntList(form["f_militaryBaseIds"]),
                 SenderMilitaryBaseIds = ParseIntList(form["f_senderMilitaryBaseIds"]),
@@ -62,14 +95,29 @@ namespace dttbidsmxbb.Models.DTOs
                 FormalizationDateFrom = ParseDate(form["f_formalizationDateFrom"]),
                 FormalizationDateTo = ParseDate(form["f_formalizationDateTo"]),
 
+                SentSerialNumberQuery = TextValue(form["f_sentSerialNumberQuery"]),
+                ReceivedSerialNumberQuery = TextValue(form["f_receivedSerialNumberQuery"]),
+                RegardingPositionQuery = TextValue(form["f_regardingPositionQuery"]),
+                PositionQuery = TextValue(form["f_positionQuery"]),
+                FirstnameQuery = TextValue(form["f_firstnameQuery"]),
+                LastnameQuery = TextValue(form["f_lastnameQuery"]),
+                FathernameQuery = TextValue(form["f_fathernameQuery"]),
+                FormalizationSentSerialQuery = TextValue(form["f_formalizationSentSerialQuery"]),
+                FormalizationSerialQuery = TextValue(form["f_formalizationSerialQuery"]),
+                RejectionInfoQuery = TextValue(form["f_rejectionInfoQuery"]),
+                SentBackInfoQuery = TextValue(form["f_sentBackInfoQuery"]),
+                NoteQuery = TextValue(form["f_noteQuery"]),
+
+                LastnameNull = NullFilterValue(form["f_lastnameNull"]),
+                FathernameNull = NullFilterValue(form["f_fathernameNull"]),
                 RejectionInfoNull = NullFilterValue(form["f_rejectionInfoNull"]),
                 SentBackInfoNull = NullFilterValue(form["f_sentBackInfoNull"]),
                 NoteNull = NullFilterValue(form["f_noteNull"]),
-                LastnameNull = NullFilterValue(form["f_lastnameNull"]),
-                FathernameNull = NullFilterValue(form["f_fathernameNull"])
+                FormalizationSentSerialNull = NullFilterValue(form["f_formalizationSentSerialNull"]),
+                FormalizationSentDateNull = NullFilterValue(form["f_formalizationSentDateNull"]),
+                FormalizationSerialNull = NullFilterValue(form["f_formalizationSerialNull"]),
+                FormalizationDateNull = NullFilterValue(form["f_formalizationDateNull"])
             };
-
-            return filter;
         }
 
         private static List<int> ParseIntList(string? raw)
@@ -94,6 +142,12 @@ namespace dttbidsmxbb.Models.DTOs
         {
             var val = raw?.Trim().ToLower();
             return val is "null" or "notnull" ? val : null;
+        }
+
+        private static string? TextValue(string? raw)
+        {
+            var val = raw?.Trim();
+            return string.IsNullOrEmpty(val) ? null : val;
         }
     }
 }

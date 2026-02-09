@@ -1,3 +1,4 @@
+@model Information;
 @using dttbidsmxbb.Models.Enum
 @{
     ViewData["Title"] = "Məlumatlar";
@@ -12,8 +13,8 @@
         </div>
         <div class="btn-group">
             <a asp-controller="Export" asp-action="Excel" class="btn btn-success btn-sm">Excel</a>
-            <a asp-controller="Export" asp-action="Pdf" class="btn btn-danger btn-sm">PDF</a>
-            <a asp-controller="Export" asp-action="Word" class="btn btn-info btn-sm text-white">Word</a>
+            <a asp-controller="Export" asp-action="Pdf" class="btn btn-warning btn-sm">PDF</a>
+            <a asp-controller="Export" asp-action="Word" class="btn btn-primary btn-sm text-white">Word</a>
         </div>
         <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">İdxal</button>
         <a asp-controller="Informations" asp-action="Create" class="btn btn-primary btn-sm">Yeni məlumat</a>
@@ -31,9 +32,9 @@
         <div id="filterPanel" class="accordion-collapse collapse show" data-bs-parent="#filterAccordion">
             <div class="accordion-body py-3">
 
-                <div class="row g-2 mb-3">
+                <div class="row g-2 mb-3 filter-row-equal">
                     <div class="col-2">
-                        <label for="f_senderMilitaryBaseIds">Göndərən Hərbi hissə</label>
+                        <label for="f_senderMilitaryBaseIds">@Html.DisplayNameFor(m => m.SenderMilitaryBase)</label>
                         <select id="f_senderMilitaryBaseIds"
                                 class="form-control w-100 filter-select2"
                                 asp-items="ViewBag.MilitaryBases"
@@ -42,59 +43,65 @@
                     </div>
 
                     <div class="col-2">
-                        <label for="f_militaryBaseIds">Hərbi hissə</label>
+                        <label for="f_militaryBaseIds">@Html.DisplayNameFor(m => m.MilitaryBase)</label>
                         <select id="f_militaryBaseIds"
-                                class="form-control w-100 filter-select2"
+                                class="form-control filter-select2"
                                 asp-items="ViewBag.MilitaryBases"
                                 multiple>
                         </select>
                     </div>
 
                     <div class="col-2">
-                        <label class="form-label form-label-sm">Göndərilmə nömrəsi</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" id="" class="form-control text-filter-input" placeholder="0/0" />
-                        </div>
+                        <label for="f_sentSerialNumberQuery">@Html.DisplayNameFor(m => m.SentSerialNumber)</label>
+                        <input id="f_sentSerialNumberQuery"
+                               class="form-control text-filter-input"
+                               placeholder="Məsələn: 0/0" />
                     </div>
 
                     <div class="col-2">
-                        <label for="">Göndərilmə tarixi</label>
-                        <input id=""
-                               class="form-control form-control-sm w-100 filter-el"
-                               placeholder="Göndərilmə tarixi (aralıq)"
+                        <label for="f_sentDateRange">@Html.DisplayNameFor(m => m.SentDate)</label>
+                        <input id="f_sentDateRange"
+                               class="form-control filter-el"
+                               placeholder="Tarix aralığı seçin..."
                                autocomplete="off" />
                     </div>
-                    
+
                     <div class="col-2">
-                        <label class="form-label form-label-sm">DTTBİ-ə daxil olma nömrəsi</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" id="" class="form-control text-filter-input" placeholder="0/0" />
-                        </div>
+                        <label for="f_receivedSerialNumberQuery">@Html.DisplayNameFor(m => m.ReceivedSerialNumber)</label>
+                        <input id="f_receivedSerialNumberQuery"
+                               class="form-control text-filter-input"
+                               placeholder="Məsələn: 0/0" />
                     </div>
 
                     <div class="col-2">
-                        <label for="">DTTBİ-ə daxil olma tarixi</label>
-                        <input id=""
-                               class="form-control form-control-sm w-100 filter-el"
-                               placeholder="DTTBİ-ə daxil olma tarixi (aralıq)"
+                        <label for="f_receivedDateRange">@Html.DisplayNameFor(m => m.ReceivedDate)</label>
+                        <input id="f_receivedDateRange"
+                               class="form-control filter-el"
+                               placeholder="Tarix aralığı seçin..."
                                autocomplete="off" />
                     </div>
                 </div>
 
-                <div class="row g-2 mb-3">
+                <hr /> 
+
+                <div class="row g-2 mb-3 filter-row-equal">
                     <div class="col-2">
-                        <label class="form-label form-label-sm">Tələb olunan buraxılışlın forması</label>
-                        <select id="f_privacyLevels" class="filter-select2" multiple>
+                        <label for="f_privacyLevels">@Html.DisplayNameFor(m => m.PrivacyLevel)</label>
+                        <select id="f_privacyLevels"
+                                class="form-control filter-select2"
+                                multiple>
                             <option value="@((int)PrivacyLevel.TopSecret)">Tam məxfi</option>
                             <option value="@((int)PrivacyLevel.Secret)">Məxfi</option>
                         </select>
                     </div>
 
                     <div class="col-2">
-                        <label class="form-label form-label-sm">Buraxılışın DTX-a göndərilmə nömrəsi</label>
+                        <label for="f_formalizationSentSerialQuery">@Html.DisplayNameFor(m => m.SendAwaySerialNumber)</label>
                         <div class="input-group input-group-sm">
-                            <input type="text" id="" class="form-control text-filter-input" placeholder="0/0" />
-                            <select id="" class="form-select null-filter-select">
+                            <input id="f_formalizationSentSerialQuery"
+                                   class="form-control text-filter-input"
+                                   placeholder="Məsələn: 0/0" />
+                            <select id="f_formalizationSentSerialNull" class="form-select null-filter-select">
                                 <option value="">Hamısı</option>
                                 <option value="notnull">Dolu</option>
                                 <option value="null">Boş</option>
@@ -103,68 +110,103 @@
                     </div>
 
                     <div class="col-2">
-                        <label for="">Buraxılışın DTX-a göndərilmə tarixi</label>
-                        <input id=""
-                               class="form-control form-control-sm w-100 filter-el"
-                               placeholder="Buraxılışın DTX-a göndərilmə tarixi (aralıq)"
-                               autocomplete="off" />
-                        <select id="" class="form-select null-filter-select">
-                            <option value="">Hamısı</option>
-                            <option value="notnull">Dolu</option>
-                            <option value="null">Boş</option>
-                        </select>
+                        <label for="f_formalizationSentDateRange">@Html.DisplayNameFor(m => m.SendAwayDate)</label>
+                        <div class="input-group input-group-sm">
+                            <input id="f_formalizationSentDateRange"
+                                   class="form-control filter-el"
+                                   placeholder="Tarix aralığı seçin..."
+                                   autocomplete="off" />
+                            <select id="f_formalizationSentDateNull" class="form-select null-filter-select">
+                                <option value="">Hamısı</option>
+                                <option value="notnull">Dolu</option>
+                                <option value="null">Boş</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="col-2">
-                        <label for="f_executorIds">İcraçı</label>
+                        <label for="f_executorIds">@Html.DisplayNameFor(m => m.Executor)</label>
                         <select id="f_executorIds"
-                                class="form-control w-100 filter-select2"
+                                class="form-control filter-select2"
                                 asp-items="ViewBag.Executors"
                                 multiple>
                         </select>
                     </div>
 
                     <div class="col-2">
-                        <label class="form-label form-label-sm">Rəsmiləşdirilmiş buraxılış vərəqəsinin nömrəsi</label>
+                        <label for="f_formalizationSerialQuery">@Html.DisplayNameFor(m => m.FormalizationSerialNumber)</label>
                         <div class="input-group input-group-sm">
-                            <input type="text" id="" class="form-control text-filter-input" placeholder="0/0" />
-                            <select id="" class="form-select null-filter-select">
+                            <input id="f_formalizationSerialQuery"
+                                   class="form-control text-filter-input"
+                                   placeholder="Məsələn: 0/0" />
+                            <select id="f_formalizationSerialNull" class="form-select null-filter-select">
                                 <option value="">Hamısı</option>
                                 <option value="notnull">Dolu</option>
                                 <option value="null">Boş</option>
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="col-2">
-                        <label for="">Rəsmiləşdirilmiş buraxılış vərəqəsinin tarixi</label>
-                        <input id=""
-                               class="form-control form-control-sm w-100 filter-el"
-                               placeholder="Rəsmiləşdirilmiş buraxılış vərəqəsinin tarixi (aralıq)"
+                        <label for="f_formalizationDateRange">@Html.DisplayNameFor(m => m.FormalizationDate)</label>
+                        <div class="input-group input-group-sm">
+                            <input id="f_formalizationDateRange"
+                                   class="form-control filter-el"
+                                   placeholder="Tarix aralığı seçin..."
+                                   autocomplete="off" />
+                            <select id="f_formalizationDateNull" class="form-select null-filter-select">
+                                <option value="">Hamısı</option>
+                                <option value="notnull">Dolu</option>
+                                <option value="null">Boş</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="row g-2 mb-3 filter-row-equal">
+                    <div class="col-3">
+                        <label for="f_militaryRankIds">@Html.DisplayNameFor(m => m.MilitaryRank)</label>
+                        <select id="f_militaryRankIds"
+                                class="form-control filter-select2"
+                                asp-items="ViewBag.MilitaryRanks"
+                                multiple>
+                        </select>
+                    </div>
+
+                    <div class="col-3">
+                        <label for="f_regardingPositionQuery">@Html.DisplayNameFor(m => m.RegardingPosition)</label>
+                        <input id="f_regardingPositionQuery"
+                               class="form-control text-filter-input"
+                               placeholder="@Html.DisplayNameFor(m => m.RegardingPosition)" />
+                    </div>
+
+                    <div class="col-3">
+                        <label for="f_positionQuery">@Html.DisplayNameFor(m => m.Position)</label>
+                        <input id="f_positionQuery"
+                               class="form-control text-filter-input"
+                               placeholder="@Html.DisplayNameFor(m => m.Position)" />
+                    </div>
+
+                    <div class="col-3">
+                        <label for="f_assignmentDateRange">@Html.DisplayNameFor(m => m.AssignmentDate)</label>
+                        <input id="f_assignmentDateRange"
+                               class="form-control filter-el"
+                               placeholder="Tarix aralığı seçin..."
                                autocomplete="off" />
                     </div>
                 </div>
 
                 <hr />
 
-                <div class="row g-2 mb-3">
-                    <div class="col-2">
-                        <label for="f_militaryRankIds">Buraxılışı rəsmiləşdirilən şəxsin rütbəsi</label>
-                        <select id="f_militaryRankIds"
-                                class="form-control w-100 filter-select2"
-                                asp-items="ViewBag.MilitaryRanks"
-                                multiple>
-                        </select>
-                    </div>
-
-                    @* Buraxılışın rəsmiləşdirildiyi vəzifə *@
-
-                    @* Buraxılışı rəsmiləşdirilən şəxsin vəzifəsi *@
-
-                    <div class="col-2">
-                        <label class="form-label form-label-sm">Soyad</label>
+                <div class="row g-2 mb-3 filter-row-equal">
+                    <div class="col-3">
+                        <label for="f_lastnameQuery">@Html.DisplayNameFor(m => m.Lastname)</label>
                         <div class="input-group input-group-sm">
-                            <input type="text" id="f_lastnameQuery" class="form-control text-filter-input" placeholder="Axtar..." />
+                            <input id="f_lastnameQuery"
+                                   class="form-control text-filter-input"
+                                   placeholder="@Html.DisplayNameFor(m => m.Lastname)" />
                             <select id="f_lastnameNull" class="form-select null-filter-select">
                                 <option value="">Hamısı</option>
                                 <option value="notnull">Dolu</option>
@@ -173,22 +215,19 @@
                         </div>
                     </div>
 
-                    <div class="col-2">
-                        <label class="form-label form-label-sm">Ad</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" id="f_firstnameQuery" class="form-control text-filter-input" placeholder="Axtar..." />
-                            <select id="f_firstnameNull" class="form-select null-filter-select">
-                                <option value="">Hamısı</option>
-                                <option value="notnull">Dolu</option>
-                                <option value="null">Boş</option>
-                            </select>
-                        </div>
+                    <div class="col-3">
+                        <label for="f_firstnameQuery">@Html.DisplayNameFor(m => m.Firstname)</label>
+                        <input id="f_firstnameQuery"
+                               class="form-control text-filter-input"
+                               placeholder="@Html.DisplayNameFor(m => m.Firstname)" />
                     </div>
 
-                    <div class="col-2">
-                        <label class="form-label form-label-sm">Ata adı</label>
+                    <div class="col-3">
+                        <label for="f_fathernameQuery">@Html.DisplayNameFor(m => m.Fathername)</label>
                         <div class="input-group input-group-sm">
-                            <input type="text" id="f_fathernameQuery" class="form-control text-filter-input" placeholder="Axtar..." />
+                            <input id="f_fathernameQuery"
+                                   class="form-control text-filter-input"
+                                   placeholder="@Html.DisplayNameFor(m => m.Fathername)" />
                             <select id="f_fathernameNull" class="form-select null-filter-select">
                                 <option value="">Hamısı</option>
                                 <option value="notnull">Dolu</option>
@@ -196,19 +235,17 @@
                             </select>
                         </div>
                     </div>
-
-                    @* Buraxılışlı vəzifəyə təyin olunma tarixi *@
                 </div>
 
                 <hr />
 
-                <div class="row g-2 mb-3">
+                <div class="row g-2 mb-3 filter-row-equal">
                     <div class="col-4">
-                        <label class="form-label form-label-sm">DTX tərəfindən şəxsin buraxılış sənədlərinə <br /> imtina bildirilməsi barədə məlumat</label>
+                        <label for="f_rejectionInfoQuery">@Html.DisplayNameFor(m => m.RejectionInfo)</label>
                         <div class="input-group input-group-sm">
                             <textarea id="f_rejectionInfoQuery"
                                       class="form-control form-control-sm filter-el"
-                                      placeholder="DTX tərəfindən şəxsin buraxılış sənədlərinə imtina bildirilməsi barədə məlumat"
+                                      placeholder="@Html.DisplayNameFor(m => m.RejectionInfo)"
                                       rows="2"
                                       style="resize: vertical;"></textarea>
                             <select id="f_rejectionInfoNull" class="form-select null-filter-select">
@@ -220,11 +257,11 @@
                     </div>
 
                     <div class="col-4">
-                        <label class="form-label form-label-sm">Şəxslərin buraxılış sənədlərini rəsmiləşdirilmədən h/h-ə <br /> geri qaytarılması barədə məlumat</label>
+                        <label for="f_sentBackInfoQuery">@Html.DisplayNameFor(m => m.SentBackInfo)</label>
                         <div class="input-group input-group-sm">
                             <textarea id="f_sentBackInfoQuery"
                                       class="form-control form-control-sm filter-el"
-                                      placeholder="Şəxslərin buraxılış sənədlərini rəsmiləşdirilmədən h/h-ə geri qaytarılması barədə məlumat"
+                                      placeholder="@Html.DisplayNameFor(m => m.SentBackInfo)"
                                       rows="2"
                                       style="resize: vertical;"></textarea>
                             <select id="f_sentBackInfoNull" class="form-select null-filter-select">
@@ -236,14 +273,14 @@
                     </div>
 
                     <div class="col-4">
-                        <label class="form-label form-label-sm"><br />Qeyd</label>
+                        <label for="f_noteQuery">@Html.DisplayNameFor(m => m.Note)</label>
                         <div class="input-group input-group-sm">
                             <textarea id="f_noteQuery"
                                       class="form-control form-control-sm filter-el"
-                                      placeholder="Qeyd"
+                                      placeholder="@Html.DisplayNameFor(m => m.Note)"
                                       rows="2"
                                       style="resize: vertical;"></textarea>
-                            <select id="f_noteInfoNull" class="form-select null-filter-select">
+                            <select id="f_noteNull" class="form-select null-filter-select">
                                 <option value="">Hamısı</option>
                                 <option value="notnull">Dolu</option>
                                 <option value="null">Boş</option>

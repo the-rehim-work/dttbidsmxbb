@@ -1,86 +1,124 @@
 ﻿$(function () {
-    var token = $('input[name="__RequestVerificationToken"]').val() ||
-        $('form input[name="__RequestVerificationToken"]').val();
+    var token = $('input[name="__RequestVerificationToken"]').val();
+
+    var dateRangeMap = {
+        f_sentDateRange: { from: 'f_sentDateFrom', to: 'f_sentDateTo' },
+        f_receivedDateRange: { from: 'f_receivedDateFrom', to: 'f_receivedDateTo' },
+        f_assignmentDateRange: { from: 'f_assignmentDateFrom', to: 'f_assignmentDateTo' },
+        f_formalizationSentDateRange: { from: 'f_sendAwayDateFrom', to: 'f_sendAwayDateTo' },
+        f_formalizationDateRange: { from: 'f_formalizationDateFrom', to: 'f_formalizationDateTo' }
+    };
 
     var filterPickers = {};
-    $('.flatpickr-filter').each(function () {
-        filterPickers[this.id] = flatpickr(this, {
+    Object.keys(dateRangeMap).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        filterPickers[id] = flatpickr(el, {
+            mode: 'range',
             dateFormat: 'Y-m-d',
             altInput: true,
             altFormat: 'd.m.Y',
             locale: 'az',
-            allowInput: true
+            allowInput: false
         });
     });
 
-    function initMultiSelect2(selector = '.filter-select2') {
-        $(selector).select2({
-            width: '100%',
-            placeholder: 'Hamısı',
-            allowClear: true,
-            closeOnSelect: false,
-            language: {
-                noResults: () => 'Nəticə tapılmadı'
-            }
-        });
+    var nullableDateIds = ['f_formalizationSentDateRange', 'f_formalizationDateRange'];
 
-        $(selector).each(function () {
-            if (!$(this).val() || !$(this).val().length) {
-                $(this).val(null).trigger('change');
-            }
-        });
-    }
-    initMultiSelect2();
+    $('#filterPanel .filter-select2').select2({
+        width: '100%',
+        placeholder: 'Hamısı',
+        allowClear: true,
+        closeOnSelect: false,
+        language: { noResults: function () { return 'Nəticə tapılmadı'; } }
+    }).each(function () {
+        if (!$(this).val() || !$(this).val().length) {
+            $(this).val(null).trigger('change');
+        }
+    });
+
+    var multiSelectIds = [
+        'f_senderMilitaryBaseIds', 'f_militaryBaseIds',
+        'f_militaryRankIds', 'f_executorIds', 'f_privacyLevels'
+    ];
+
+    var textInputIds = [
+        'f_sentSerialNumberQuery', 'f_receivedSerialNumberQuery',
+        'f_regardingPositionQuery', 'f_positionQuery', 'f_firstnameQuery'
+    ];
+
+    var nullPairs = [
+        { query: 'f_lastnameQuery', nullSel: 'f_lastnameNull' },
+        { query: 'f_fathernameQuery', nullSel: 'f_fathernameNull' },
+        { query: 'f_formalizationSentSerialQuery', nullSel: 'f_formalizationSentSerialNull' },
+        { query: 'f_formalizationSerialQuery', nullSel: 'f_formalizationSerialNull' },
+        { query: 'f_rejectionInfoQuery', nullSel: 'f_rejectionInfoNull' },
+        { query: 'f_sentBackInfoQuery', nullSel: 'f_sentBackInfoNull' },
+        { query: 'f_noteQuery', nullSel: 'f_noteNull' }
+    ];
+
+    var nullDatePairs = [
+        { picker: 'f_formalizationSentDateRange', nullSel: 'f_formalizationSentDateNull' },
+        { picker: 'f_formalizationDateRange', nullSel: 'f_formalizationDateNull' }
+    ];
 
     function getFilterData() {
         var data = {};
 
-        const multiSelects = [
-            'f_militaryBaseIds', 'f_senderMilitaryBaseIds',
-            'f_militaryRankIds', 'f_executorIds', 'f_privacyLevels'
-        ];
-
-        multiSelects.forEach(function (id) {
+        multiSelectIds.forEach(function (id) {
             var vals = $('#' + id).val();
             if (vals && vals.length) data[id] = vals.join(',');
         });
 
-        var dateFields = [
-            'f_sentDateFrom', 'f_sentDateTo',
-            'f_receivedDateFrom', 'f_receivedDateTo',
-            'f_assignmentDateFrom', 'f_assignmentDateTo',
-            'f_sendAwayDateFrom', 'f_sendAwayDateTo',
-            'f_formalizationDateFrom', 'f_formalizationDateTo'
-        ];
-        dateFields.forEach(function (id) {
+        Object.keys(dateRangeMap).forEach(function (id) {
+            var isNullable = nullableDateIds.indexOf(id) !== -1;
+            if (isNullable) {
+                var pair = nullDatePairs.find(function (p) { return p.picker === id; });
+                if (pair) {
+                    var nullVal = $('#' + pair.nullSel).val();
+                    if (nullVal) {
+                        data[pair.nullSel] = nullVal;
+                        return;
+                    }
+                }
+            }
             var fp = filterPickers[id];
-            if (fp && fp.selectedDates.length)
-                data[id] = fp.formatDate(fp.selectedDates[0], 'Y-m-d');
+            if (fp && fp.selectedDates.length) {
+                var map = dateRangeMap[id];
+                data[map.from] = fp.formatDate(fp.selectedDates[0], 'Y-m-d');
+                if (fp.selectedDates.length > 1) {
+                    data[map.to] = fp.formatDate(fp.selectedDates[1], 'Y-m-d');
+                }
+            }
         });
 
-        var nullFields = [
-            'f_rejectionInfoNull', 'f_sentBackInfoNull',
-            'f_noteNull', 'f_lastnameNull', 'f_fathernameNull'
-        ];
-        nullFields.forEach(function (id) {
-            var val = $('#' + id).val();
+        textInputIds.forEach(function (id) {
+            var val = $.trim($('#' + id).val());
             if (val) data[id] = val;
+        });
+
+        nullPairs.forEach(function (pair) {
+            var nullVal = $('#' + pair.nullSel).val();
+            if (nullVal) {
+                data[pair.nullSel] = nullVal;
+            } else {
+                var el = $('#' + pair.query);
+                var val = $.trim(el.val());
+                if (val) data[pair.query] = val;
+            }
         });
 
         return data;
     }
 
     function countActiveFilters() {
-        var count = 0;
-        var fd = getFilterData();
-        count = Object.keys(fd).length;
+        var count = Object.keys(getFilterData()).length;
         var badge = $('#activeFilterCount');
         if (count > 0) {
             badge.text(count).removeClass('d-none');
         } else {
             badge.addClass('d-none');
         }
-        return count;
     }
 
     var table = $('#informationsTable').DataTable({
@@ -90,7 +128,7 @@
         paging: true,
         scrollX: true,
         autoWidth: false,
-        dom: 'Brtip',
+        dom: 'rtip',
         ajax: {
             url: '/Informations/Load',
             type: 'POST',
@@ -108,20 +146,7 @@
         order: [[5, 'desc']],
         pageLength: 25,
         lengthMenu: [10, 25, 50, 100],
-        fixedColumns: {
-            start: 0,
-            end: 1
-        },
-        language: {
-            processing: 'Yüklənir...',
-            lengthMenu: '_MENU_ sətir göstər',
-            zeroRecords: 'Nəticə tapılmadı',
-            info: '_TOTAL_ nəticədən _START_ - _END_ göstərilir',
-            infoEmpty: 'Nəticə yoxdur',
-            infoFiltered: '(cəmi _MAX_ nəticədən)',
-            search: 'Axtar:',
-            paginate: { first: 'İlk', last: 'Son', next: '›', previous: '‹' }
-        },
+        fixedColumns: { start: 0, end: 1 },
         columns: [
             { data: 'senderMilitaryBase', render: function (d) { return d ? d.name : ''; } },
             { data: 'militaryBase', render: function (d) { return d ? d.name : ''; } },
@@ -137,11 +162,11 @@
             { data: 'fathername', defaultContent: '' },
             { data: 'assignmentDate' },
             { data: 'privacyLevel', render: function (d) { return d === 1 ? 'Tam məxfi' : 'Məxfi'; } },
-            { data: 'sendAwaySerialNumber' },
-            { data: 'sendAwayDate' },
+            { data: 'sendAwaySerialNumber', defaultContent: '' },
+            { data: 'sendAwayDate', defaultContent: '' },
             { data: 'executor', render: function (d) { return d ? d.fullInfo : ''; } },
-            { data: 'formalizationSerialNumber' },
-            { data: 'formalizationDate' },
+            { data: 'formalizationSerialNumber', defaultContent: '' },
+            { data: 'formalizationDate', defaultContent: '' },
             { data: 'rejectionInfo', defaultContent: '' },
             { data: 'sentBackInfo', defaultContent: '' },
             { data: 'note', defaultContent: '' },
@@ -163,7 +188,7 @@
                 $(row).addClass('table-danger').css('opacity', '0.6');
             }
         },
-        initComplete: () => $('#tableLoader').fadeOut(150)
+        initComplete: function () { $('#tableLoader').fadeOut(150); }
     });
 
     $('#showDeletedToggle').on('change', function () {
@@ -176,15 +201,15 @@
     });
 
     $('#resetFilters').on('click', function () {
-        $('select[multiple]', '#filterPanel').each(function () {
-            $(this).val([]);
-        });
-        $('select:not([multiple])', '#filterPanel').each(function () {
-            $(this).val('');
-        });
-        Object.values(filterPickers).forEach(function (fp) {
-            fp.clear();
-        });
+        $('#filterPanel .filter-select2').val(null).trigger('change');
+
+        $('#filterPanel .null-filter-select').val('');
+
+        $('#filterPanel .text-filter-input').val('');
+        $('#filterPanel textarea').val('');
+
+        Object.values(filterPickers).forEach(function (fp) { fp.clear(); });
+
         countActiveFilters();
         table.ajax.reload();
     });
@@ -244,60 +269,5 @@
         });
     });
 
-    var importModal = new bootstrap.Modal('#importModal');
-
-    $('#importBtn').on('click', function () {
-        var fileInput = document.getElementById('importFile');
-        if (!fileInput.files.length) {
-            alert('Fayl seçin');
-            return;
-        }
-
-        var formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-        formData.append('useAsDb', $('#useAsDbCheck').is(':checked'));
-        formData.append('__RequestVerificationToken', token);
-
-        var btn = $(this);
-        btn.prop('disabled', true).text('Yüklənir...');
-
-        $.ajax({
-            url: '/Import/Upload',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (res) {
-                var resultDiv = $('#importResult').removeClass('d-none');
-                if (res.success) {
-                    resultDiv.html('<div class="alert alert-success">' + res.message + '</div>');
-                    table.ajax.reload();
-                } else {
-                    var html = '<div class="alert alert-warning">' + res.message + '</div>';
-                    if (res.errors && res.errors.length) {
-                        html += '<div class="table-responsive" style="max-height:200px; overflow:auto;">';
-                        html += '<table class="table table-sm table-bordered"><thead><tr><th>Sətir</th><th>Sahə</th><th>Xəta</th></tr></thead><tbody>';
-                        res.errors.forEach(function (e) {
-                            html += '<tr><td>' + e.row + '</td><td>' + e.field + '</td><td>' + e.message + '</td></tr>';
-                        });
-                        html += '</tbody></table></div>';
-                    }
-                    resultDiv.html(html);
-                    if (res.importedRows > 0) table.ajax.reload();
-                }
-            },
-            error: function () {
-                $('#importResult').removeClass('d-none').html('<div class="alert alert-danger">Xəta baş verdi</div>');
-            },
-            complete: function () {
-                btn.prop('disabled', false).text('İdxal et');
-            }
-        });
-    });
-
-    $('#importModal').on('hidden.bs.modal', function () {
-        $('#importFile').val('');
-        $('#useAsDbCheck').prop('checked', false);
-        $('#importResult').addClass('d-none').html('');
-    });
+    // TODO: Import logic — will be wired separately
 });
