@@ -6,16 +6,38 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">Məlumatlar</h4>
-    <div class="d-flex gap-2">
-        <div class="form-check form-switch d-flex align-items-center me-3">
+    <div class="d-flex gap-2 align-items-center">
+        <div class="form-check form-switch d-flex align-items-center me-2">
             <input class="form-check-input" type="checkbox" id="showDeletedToggle" />
             <label class="form-check-label ms-2" for="showDeletedToggle">Silinmişləri göstər</label>
         </div>
+
         <div class="btn-group">
-            <a asp-controller="Export" asp-action="Excel" class="btn btn-success btn-sm">Excel</a>
-            <a asp-controller="Export" asp-action="Pdf" class="btn btn-warning btn-sm">PDF</a>
-            <a asp-controller="Export" asp-action="Word" class="btn btn-primary btn-sm text-white">Word</a>
+            <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" id="colVisBtn">
+                Sütunlar
+            </button>
+            <div class="dropdown-menu dropdown-menu-end p-2" id="colVisMenu" style="min-width:220px;max-height:400px;overflow-y:auto;">
+            </div>
         </div>
+
+        <div class="btn-group">
+            <button type="button" class="btn btn-success btn-sm" id="exportExcel">Excel</button>
+            <button type="button" class="btn btn-warning btn-sm" id="exportPdf">PDF</button>
+            <button type="button" class="btn btn-primary btn-sm text-white" id="exportWord">Word</button>
+            <button type="button" class="btn btn-outline-dark btn-sm" id="exportPrint">🖨️</button>
+        </div>
+
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-info btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                Ehtiyat
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><button class="dropdown-item" id="backupExportBtn">İxrac et (.dttbi)</button></li>
+                <li><hr class="dropdown-divider" /></li>
+                <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#backupImportModal">İdxal et (.dttbi)</button></li>
+            </ul>
+        </div>
+
         <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">İdxal</button>
         <a asp-controller="Informations" asp-action="Create" class="btn btn-primary btn-sm">Yeni məlumat</a>
     </div>
@@ -295,8 +317,6 @@
                 </div>
             </div>
         </div>
-
-
     </div>
 </div>
 
@@ -309,19 +329,19 @@
             <th>@Html.DisplayNameFor(m => m.SentDate)</th>
             <th>@Html.DisplayNameFor(m => m.ReceivedSerialNumber)</th>
             <th>@Html.DisplayNameFor(m => m.ReceivedDate)</th>
+            <th>@Html.DisplayNameFor(m => m.MilitaryRank)</th>
+            <th>@Html.DisplayNameFor(m => m.RegardingPosition)</th>
+            <th>@Html.DisplayNameFor(m => m.Position)</th>
+            <th>@Html.DisplayNameFor(m => m.Lastname)</th>
+            <th>@Html.DisplayNameFor(m => m.Firstname)</th>
+            <th>@Html.DisplayNameFor(m => m.Fathername)</th>
+            <th>@Html.DisplayNameFor(m => m.AssignmentDate)</th>
             <th>@Html.DisplayNameFor(m => m.PrivacyLevel)</th>
             <th>@Html.DisplayNameFor(m => m.SendAwaySerialNumber)</th>
             <th>@Html.DisplayNameFor(m => m.SendAwayDate)</th>
             <th>@Html.DisplayNameFor(m => m.Executor)</th>
             <th>@Html.DisplayNameFor(m => m.FormalizationSerialNumber)</th>
             <th>@Html.DisplayNameFor(m => m.FormalizationDate)</th>
-            <th>@Html.DisplayNameFor(m => m.MilitaryRank)</th>
-            <th>@Html.DisplayNameFor(m => m.RegardingPosition)</th>
-            <th>@Html.DisplayNameFor(m => m.Position)</th>
-            <th>@Html.DisplayNameFor(m => m.AssignmentDate)</th>
-            <th>@Html.DisplayNameFor(m => m.Lastname)</th>
-            <th>@Html.DisplayNameFor(m => m.Firstname)</th>
-            <th>@Html.DisplayNameFor(m => m.Fathername)</th>
             <th>@Html.DisplayNameFor(m => m.RejectionInfo)</th>
             <th>@Html.DisplayNameFor(m => m.SentBackInfo)</th>
             <th>@Html.DisplayNameFor(m => m.Note)</th>
@@ -334,7 +354,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Məlumatların idxalı</h5>
+                <h5 class="modal-title">Məlumatların idxalı (Şablon)</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -361,6 +381,42 @@
     </div>
 </div>
 
+<div class="modal fade" id="backupImportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ehtiyat nüsxədən bərpa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Fayl seçin (.dttbi)</label>
+                    <input type="file" id="backupFile" class="form-control" accept=".dttbi" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label d-block">Rejim</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="backupMode" id="modeAppend" value="append" checked />
+                        <label class="form-check-label" for="modeAppend">Əlavə et (dublikatlar keçilir)</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="backupMode" id="modeClean" value="clean" />
+                        <label class="form-check-label text-danger" for="modeClean">Təmizlə və yaz</label>
+                    </div>
+                </div>
+                <div id="backupCleanWarning" class="alert alert-danger d-none" style="font-size:0.85rem;">
+                    Diqqət! Mövcud bütün aktiv məlumatlar silinəcək və yalnız fayldakı məlumatlar yazılacaq.
+                </div>
+                <div id="backupImportResult" class="d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Bağla</button>
+                <button type="button" id="backupImportBtn" class="btn btn-primary">İdxal et</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
@@ -376,6 +432,10 @@
         </div>
     </div>
 </div>
+
+<form id="exportForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
 
 @section Scripts {
     <script src="~/js/information-index.js" asp-append-version="true"></script>

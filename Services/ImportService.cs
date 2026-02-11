@@ -7,11 +7,212 @@ using dttbidsmxbb.Models.DTOs;
 using dttbidsmxbb.Models.Enum;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 namespace dttbidsmxbb.Services
 {
     public class ImportService(AppDbContext db) : IImportService
     {
+        public async Task<ImportResult> ImportBackupAsync(Stream fileStream, bool cleanMode)
+        {
+            var result = new ImportResult();
+
+            BackupExportDto? backup;
+            try
+            {
+                await using var gz = new GZipStream(fileStream, CompressionMode.Decompress);
+                backup = await JsonSerializer.DeserializeAsync<BackupExportDto>(gz, BackupJsonOpts);
+            }
+            catch
+            {
+                result.Errors.Add(new ImportError { Row = 0, Field = "Fayl", Message = "Fayl formatı yanlışdır." });
+                return result;
+            }
+
+            if (backup?.Records == null || backup.Records.Count == 0)
+            {
+                result.Errors.Add(new ImportError { Row = 0, Field = "Fayl", Message = "Faylda heç bir məlumat tapılmadı." });
+                return result;
+            }
+
+            result.TotalRows = backup.Records.Count;
+
+            var baseLookup = await db.MilitaryBases.ToDictionaryAsync(x => x.Name.ToLower(), x => x.Id);
+            var rankLookup = await db.MilitaryRanks.ToDictionaryAsync(x => x.Name.ToLower(), x => x.Id);
+            var execLookup = await db.Executors.ToDictionaryAsync(x => x.FullInfo.ToLower(), x => x.Id);
+
+            HashSet<string>? existingFingerprints = null;
+            if (!cleanMode)
+            {
+                var existing = await db.Informations
+                    .Where(x => !x.DeletedAt.HasValue)
+                    .AsNoTracking()
+                    .ToListAsync();
+                existingFingerprints = new HashSet<string>(existing.Select(Fingerprint));
+            }
+
+            var toInsert = new List<Information>();
+
+            for (var i = 0; i < backup.Records.Count; i++)
+            {
+                var rec = backup.Records[i];
+                var rowNum = i + 1;
+
+                var baseId = await ResolveLookup(rec.MilitaryBaseName, baseLookup, LookupKind.Base);
+                var senderBaseId = await ResolveLookup(rec.SenderMilitaryBaseName, baseLookup, LookupKind.Base);
+                var rankId = await ResolveLookup(rec.MilitaryRankName, rankLookup, LookupKind.Rank);
+                var execId = await ResolveLookup(rec.ExecutorFullInfo, execLookup, LookupKind.Executor);
+
+                if (baseId == 0 || senderBaseId == 0 || rankId == 0 || execId == 0)
+                {
+                    result.Errors.Add(new ImportError { Row = rowNum, Field = "Axtarış", Message = "Axtarış dəyərləri həll edilə bilmədi." });
+                    result.SkippedRows++;
+                    continue;
+                }
+
+                if (!Enum.IsDefined(typeof(PrivacyLevel), rec.PrivacyLevel))
+                {
+                    result.Errors.Add(new ImportError { Row = rowNum, Field = "Buraxılış forması", Message = "Yanlış dəyər." });
+                    result.SkippedRows++;
+                    continue;
+                }
+
+                var entity = new Information
+                {
+                    MilitaryBaseId = baseId,
+                    SenderMilitaryBaseId = senderBaseId,
+                    SentSerialNumber = rec.SentSerialNumber,
+                    SentDate = rec.SentDate,
+                    ReceivedSerialNumber = rec.ReceivedSerialNumber,
+                    ReceivedDate = rec.ReceivedDate,
+                    MilitaryRankId = rankId,
+                    RegardingPosition = rec.RegardingPosition,
+                    Position = rec.Position,
+                    Lastname = rec.Lastname,
+                    Firstname = rec.Firstname,
+                    Fathername = rec.Fathername,
+                    AssignmentDate = rec.AssignmentDate,
+                    PrivacyLevel = (PrivacyLevel)rec.PrivacyLevel,
+                    SendAwaySerialNumber = rec.SendAwaySerialNumber,
+                    SendAwayDate = rec.SendAwayDate,
+                    ExecutorId = execId,
+                    FormalizationSerialNumber = rec.FormalizationSerialNumber,
+                    FormalizationDate = rec.FormalizationDate,
+                    RejectionInfo = rec.RejectionInfo,
+                    SentBackInfo = rec.SentBackInfo,
+                    Note = rec.Note,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                if (!cleanMode && existingFingerprints != null)
+                {
+                    var fp = Fingerprint(entity);
+                    if (existingFingerprints.Contains(fp))
+                    {
+                        result.SkippedRows++;
+                        continue;
+                    }
+                    existingFingerprints.Add(fp);
+                }
+
+                toInsert.Add(entity);
+            }
+
+            if (cleanMode && toInsert.Count > 0)
+                await db.Informations.Where(x => !x.DeletedAt.HasValue).ExecuteDeleteAsync();
+
+            if (toInsert.Count > 0)
+            {
+                db.Informations.AddRange(toInsert);
+                await db.SaveChangesAsync();
+            }
+
+            result.ImportedRows = toInsert.Count;
+            result.Success = result.Errors.Count == 0;
+            return result;
+        }
+
+        private enum LookupKind { Base, Rank, Executor }
+
+        private async Task<int> ResolveLookup(string name, Dictionary<string, int> lookup, LookupKind kind)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return 0;
+
+            var key = name.Trim().ToLower();
+            if (lookup.TryGetValue(key, out var id))
+                return id;
+
+            var trimmed = name.Trim();
+            int newId;
+
+            switch (kind)
+            {
+                case LookupKind.Base:
+                    var mb = new MilitaryBase { Name = trimmed };
+                    db.MilitaryBases.Add(mb);
+                    await db.SaveChangesAsync();
+                    newId = mb.Id;
+                    break;
+                case LookupKind.Rank:
+                    var mr = new MilitaryRank { Name = trimmed };
+                    db.MilitaryRanks.Add(mr);
+                    await db.SaveChangesAsync();
+                    newId = mr.Id;
+                    break;
+                case LookupKind.Executor:
+                    var ex = new Executor { FullInfo = trimmed };
+                    db.Executors.Add(ex);
+                    await db.SaveChangesAsync();
+                    newId = ex.Id;
+                    break;
+                default:
+                    return 0;
+            }
+
+            lookup[key] = newId;
+            return newId;
+        }
+
+        private static string Fingerprint(Information i)
+        {
+            var sb = new StringBuilder(512);
+            sb.Append(i.MilitaryBaseId).Append('|');
+            sb.Append(i.SenderMilitaryBaseId).Append('|');
+            sb.Append(i.SentSerialNumber).Append('|');
+            sb.Append(i.SentDate).Append('|');
+            sb.Append(i.ReceivedSerialNumber).Append('|');
+            sb.Append(i.ReceivedDate).Append('|');
+            sb.Append(i.MilitaryRankId).Append('|');
+            sb.Append(i.RegardingPosition).Append('|');
+            sb.Append(i.Position).Append('|');
+            sb.Append(i.Lastname ?? "").Append('|');
+            sb.Append(i.Firstname).Append('|');
+            sb.Append(i.Fathername ?? "").Append('|');
+            sb.Append(i.AssignmentDate).Append('|');
+            sb.Append((int)i.PrivacyLevel).Append('|');
+            sb.Append(i.SendAwaySerialNumber ?? "").Append('|');
+            sb.Append(i.SendAwayDate?.ToString() ?? "").Append('|');
+            sb.Append(i.ExecutorId).Append('|');
+            sb.Append(i.FormalizationSerialNumber ?? "").Append('|');
+            sb.Append(i.FormalizationDate?.ToString() ?? "").Append('|');
+            sb.Append(i.RejectionInfo ?? "").Append('|');
+            sb.Append(i.SentBackInfo ?? "").Append('|');
+            sb.Append(i.Note ?? "");
+
+            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(sb.ToString()));
+            return Convert.ToHexString(bytes);
+        }
+
+        private static readonly JsonSerializerOptions BackupJsonOpts = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
+
         public async Task<ImportResult> ImportAsync(Stream fileStream, string fileName, bool useAsDb)
         {
             var result = new ImportResult();
@@ -95,7 +296,7 @@ namespace dttbidsmxbb.Services
                     entity.AssignmentDate = assignDate;
 
                 var privacyStr = GetCell(row, 13);
-                if (int.TryParse(privacyStr, out var privacyInt) && System.Enum.IsDefined(typeof(PrivacyLevel), privacyInt))
+                if (int.TryParse(privacyStr, out var privacyInt) && Enum.IsDefined(typeof(PrivacyLevel), privacyInt))
                     entity.PrivacyLevel = (PrivacyLevel)privacyInt;
                 else
                 {

@@ -84,6 +84,22 @@ namespace dttbidsmxbb.Services
             };
         }
 
+        public async Task<List<Information>> GetFilteredListAsync(InformationFilter? filter = null)
+        {
+            var query = db.Informations
+                .Where(x => !x.DeletedAt.HasValue)
+                .Include(x => x.MilitaryBase)
+                .Include(x => x.SenderMilitaryBase)
+                .Include(x => x.MilitaryRank)
+                .Include(x => x.Executor)
+                .AsNoTracking();
+
+            if (filter is { HasAnyFilter: true })
+                query = ApplyFilters(query, filter);
+
+            return await query.OrderByDescending(x => x.ReceivedDate).ToListAsync();
+        }
+
         private static IQueryable<Information> ApplyFilters(IQueryable<Information> query, InformationFilter f)
         {
             if (f.MilitaryBaseIds.Count > 0)

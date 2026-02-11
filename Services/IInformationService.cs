@@ -6,6 +6,7 @@ namespace dttbidsmxbb.Services
     public interface IInformationService
     {
         Task<DataTableResponse<Information>> GetAllAsync(DataTableRequest request, bool includeDeleted = false, InformationFilter? filter = null);
+        Task<List<Information>> GetFilteredListAsync(InformationFilter? filter = null);
         Task<Information?> GetByIdAsync(int id);
         Task<Information> CreateAsync(Information entity);
         Task<bool> UpdateAsync(Information entity);

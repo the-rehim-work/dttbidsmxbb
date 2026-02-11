@@ -1,6 +1,14 @@
 ﻿$(function () {
     var token = $('input[name="__RequestVerificationToken"]').val();
 
+    var columnNames = [
+        'Göndərən hərbi hissə', 'Hərbi hissə', 'Göndərilmə №', 'Göndərilmə tarixi',
+        'Daxil olma №', 'Daxil olma tarixi', 'Rütbə', 'Rəsmiləşdirildiyi vəzifə',
+        'Vəzifə', 'Soyad', 'Ad', 'Ata adı', 'Təyin olunma tarixi',
+        'Buraxılış forması', 'DTX-a göndərilmə №', 'DTX-a göndərilmə tarixi',
+        'İcraçı', 'Vərəqə №', 'Vərəqə tarixi', 'İmtina', 'Geri qaytarılma', 'Qeyd'
+    ];
+
     var dateRangeMap = {
         f_sentDateRange: { from: 'f_sentDateFrom', to: 'f_sentDateTo' },
         f_receivedDateRange: { from: 'f_receivedDateFrom', to: 'f_receivedDateTo' },
@@ -111,6 +119,14 @@
         return data;
     }
 
+    function getVisibleColumnIndices() {
+        var indices = [];
+        for (var i = 0; i < 22; i++) {
+            if (table.column(i).visible()) indices.push(i);
+        }
+        return indices;
+    }
+
     function fmtDate(d) {
         if (!d) return '';
         var parts = d.split('-');
@@ -199,7 +215,31 @@
                 $(row).addClass('table-danger').css('opacity', '0.6');
             }
         },
-        initComplete: function () { $('#tableLoader').fadeOut(150); }
+        initComplete: function () {
+            $('#tableLoader').fadeOut(150);
+            buildColVisMenu();
+        }
+    });
+
+    function buildColVisMenu() {
+        var $menu = $('#colVisMenu');
+        $menu.empty();
+        for (var i = 0; i < 22; i++) {
+            var visible = table.column(i).visible();
+            var $item = $('<label class="dropdown-item d-flex align-items-center gap-2" style="font-size:0.85rem;cursor:pointer;"></label>');
+            var $cb = $('<input type="checkbox" class="form-check-input colvis-cb" data-col="' + i + '"' + (visible ? ' checked' : '') + '>');
+            $item.append($cb).append(document.createTextNode(columnNames[i]));
+            $menu.append($item);
+        }
+    }
+
+    $(document).on('change', '.colvis-cb', function () {
+        var col = $(this).data('col');
+        table.column(col).visible($(this).is(':checked'));
+    });
+
+    $('#colVisMenu').on('click', function (e) {
+        e.stopPropagation();
     });
 
     $('#showDeletedToggle').on('change', function () {
@@ -213,17 +253,169 @@
 
     $('#resetFilters').on('click', function () {
         $('#filterPanel .filter-select2').val(null).trigger('change');
-
         $('#filterPanel .null-filter-select').val('');
-
         $('#filterPanel .text-filter-input').val('');
         $('#filterPanel textarea').val('');
-
         Object.values(filterPickers).forEach(function (fp) { fp.clear(); });
-
         countActiveFilters();
         table.ajax.reload();
     });
+
+    function submitExportForm(action) {
+        var $form = $('#exportForm');
+        $form.attr('action', '/Export/' + action);
+        $form.find('input:not([name="__RequestVerificationToken"])').remove();
+
+        var filters = getFilterData();
+        for (var key in filters) {
+            $form.append($('<input type="hidden">').attr('name', key).val(filters[key]));
+        }
+
+        var visCols = getVisibleColumnIndices();
+        $form.append($('<input type="hidden">').attr('name', 'visibleColumns').val(visCols.join(',')));
+
+        $form.submit();
+    }
+
+    $('#exportExcel').on('click', function () { submitExportForm('Excel'); });
+    $('#exportPdf').on('click', function () { submitExportForm('Pdf'); });
+    $('#exportWord').on('click', function () { submitExportForm('Word'); });
+
+    $('#exportPrint').on('click', function () {
+        var $form = $('<form method="post" target="_blank" style="display:none;"></form>');
+        $form.attr('action', '/Export/Print');
+        $form.append($('<input type="hidden">').attr('name', '__RequestVerificationToken').val(token));
+
+        var filters = getFilterData();
+        for (var key in filters) {
+            $form.append($('<input type="hidden">').attr('name', key).val(filters[key]));
+        }
+
+        var visCols = getVisibleColumnIndices();
+        $form.append($('<input type="hidden">').attr('name', 'visibleColumns').val(visCols.join(',')));
+
+        $('body').append($form);
+        $form.submit();
+        $form.remove();
+    });
+
+    $('#backupExportBtn').on('click', function () {
+        submitExportForm('Backup');
+    });
+
+    $('input[name="backupMode"]').on('change', function () {
+        if ($('#modeClean').is(':checked')) {
+            $('#backupCleanWarning').removeClass('d-none');
+        } else {
+            $('#backupCleanWarning').addClass('d-none');
+        }
+    });
+
+    $('#backupImportBtn').on('click', function () {
+        var fileInput = document.getElementById('backupFile');
+        if (!fileInput.files.length) {
+            window.dttbidsmxbb.toast('error', 'Fayl seçin.');
+            return;
+        }
+
+        var mode = $('input[name="backupMode"]:checked').val();
+        if (mode === 'clean' && !confirm('Mövcud bütün aktiv məlumatlar silinəcək. Davam etmək istəyirsiniz?')) return;
+
+        var fd = new FormData();
+        fd.append('file', fileInput.files[0]);
+        fd.append('mode', mode);
+        fd.append('__RequestVerificationToken', token);
+
+        var $btn = $(this);
+        $btn.prop('disabled', true).text('Yüklənir...');
+
+        $.ajax({
+            url: '/Import/Backup',
+            type: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                $btn.prop('disabled', false).text('İdxal et');
+                showBackupResult(res);
+                if (res.importedRows > 0) table.ajax.reload(null, false);
+            },
+            error: function () {
+                $btn.prop('disabled', false).text('İdxal et');
+                window.dttbidsmxbb.toast('error', 'Xəta baş verdi');
+            }
+        });
+    });
+
+    function showBackupResult(res) {
+        var $el = $('#backupImportResult').removeClass('d-none');
+        var cls = res.success ? 'alert-success' : 'alert-warning';
+        var html = '<div class="alert ' + cls + ' py-2 mb-0" style="font-size:0.85rem;">';
+        html += '<strong>' + res.message + '</strong>';
+        if (res.errors && res.errors.length) {
+            html += '<ul class="mt-2 mb-0">';
+            res.errors.slice(0, 20).forEach(function (e) {
+                html += '<li>Sətir ' + e.row + ' — ' + e.field + ': ' + e.message + '</li>';
+            });
+            if (res.errors.length > 20) html += '<li>...və ' + (res.errors.length - 20) + ' daha</li>';
+            html += '</ul>';
+        }
+        html += '</div>';
+        $el.html(html);
+    }
+
+    $('#importBtn').on('click', function () {
+        var fileInput = document.getElementById('importFile');
+        if (!fileInput.files.length) {
+            window.dttbidsmxbb.toast('error', 'Fayl seçin.');
+            return;
+        }
+
+        var useAsDb = $('#useAsDbCheck').is(':checked');
+        if (useAsDb && !confirm('Mövcud bütün məlumatlar silinəcək. Davam etmək istəyirsiniz?')) return;
+
+        var fd = new FormData();
+        fd.append('file', fileInput.files[0]);
+        fd.append('useAsDb', useAsDb);
+        fd.append('__RequestVerificationToken', token);
+
+        var $btn = $(this);
+        $btn.prop('disabled', true).text('Yüklənir...');
+
+        $.ajax({
+            url: '/Import/Upload',
+            type: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                $btn.prop('disabled', false).text('İdxal et');
+                showImportResult(res);
+                if (res.importedRows > 0) table.ajax.reload(null, false);
+            },
+            error: function () {
+                $btn.prop('disabled', false).text('İdxal et');
+                window.dttbidsmxbb.toast('error', 'Xəta baş verdi');
+            }
+        });
+    });
+
+    function showImportResult(res) {
+        var $el = $('#importResult').removeClass('d-none');
+        var cls = res.success ? 'alert-success' : 'alert-warning';
+        var html = '<div class="alert ' + cls + ' py-2 mb-0" style="font-size:0.85rem;">';
+        html += '<strong>' + res.message + '</strong>';
+        if (res.errors && res.errors.length) {
+            html += '<ul class="mt-2 mb-0">';
+            res.errors.slice(0, 20).forEach(function (e) {
+                html += '<li>Sətir ' + e.row + ' — ' + e.field + ': ' + e.message + '</li>';
+            });
+            if (res.errors.length > 20) html += '<li>...və ' + (res.errors.length - 20) + ' daha</li>';
+            html += '</ul>';
+        }
+        html += '</div>';
+        $el.html(html);
+    }
 
     var deleteId = null;
     var deleteModal = new bootstrap.Modal('#deleteConfirmModal');
@@ -279,6 +471,4 @@
             }
         });
     });
-
-    // TODO: Import logic — will be wired separately
 });
