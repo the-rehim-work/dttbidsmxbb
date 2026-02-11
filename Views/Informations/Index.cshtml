@@ -82,7 +82,7 @@
                     </div>
                 </div>
 
-                <hr /> 
+                <hr />
 
                 <div class="row g-2 mb-3 filter-row-equal">
                     <div class="col-2">
@@ -248,7 +248,7 @@
                                       placeholder="@Html.DisplayNameFor(m => m.RejectionInfo)"
                                       rows="2"
                                       style="resize: vertical;"></textarea>
-                            <select id="f_rejectionInfoNull" class="form-select null-filter-select">
+                            <select id="f_rejectionInfoNull" class="form-select null-filter-select h-100">
                                 <option value="">Hamısı</option>
                                 <option value="notnull">Dolu</option>
                                 <option value="null">Boş</option>
@@ -264,7 +264,7 @@
                                       placeholder="@Html.DisplayNameFor(m => m.SentBackInfo)"
                                       rows="2"
                                       style="resize: vertical;"></textarea>
-                            <select id="f_sentBackInfoNull" class="form-select null-filter-select">
+                            <select id="f_sentBackInfoNull" class="form-select null-filter-select h-100">
                                 <option value="">Hamısı</option>
                                 <option value="notnull">Dolu</option>
                                 <option value="null">Boş</option>
@@ -280,7 +280,7 @@
                                       placeholder="@Html.DisplayNameFor(m => m.Note)"
                                       rows="2"
                                       style="resize: vertical;"></textarea>
-                            <select id="f_noteNull" class="form-select null-filter-select">
+                            <select id="f_noteNull" class="form-select null-filter-select h-100">
                                 <option value="">Hamısı</option>
                                 <option value="notnull">Dolu</option>
                                 <option value="null">Boş</option>
@@ -300,31 +300,31 @@
     </div>
 </div>
 
-<table id="informationsTable" class="table table-bordered table-sm w-100" style="font-size: 0.8rem;">
+<table id="informationsTable" class="table table-striped w-100" style="font-size: 0.8rem;">
     <thead>
         <tr>
-            <th>Göndərən h/h</th>
-            <th>Hərbi hissə</th>
-            <th>Göndərilmə №</th>
-            <th>Göndərilmə tarixi</th>
-            <th>Daxil olma №</th>
-            <th>Daxil olma tarixi</th>
-            <th>Rütbə</th>
-            <th>Rəsmiləşdirildiyi vəzifə</th>
-            <th>Vəzifə</th>
-            <th>Soyad</th>
-            <th>Ad</th>
-            <th>Ata adı</th>
-            <th>Təyin olunma tarixi</th>
-            <th>Buraxılış forması</th>
-            <th>DTX-a göndərilmə №</th>
-            <th>DTX-a göndərilmə tarixi</th>
-            <th>İcraçı</th>
-            <th>Vərəqə №</th>
-            <th>Vərəqə tarixi</th>
-            <th>İmtina</th>
-            <th>Geri qaytarılma</th>
-            <th>Qeyd</th>
+            <th>@Html.DisplayNameFor(m => m.SenderMilitaryBase)</th>
+            <th>@Html.DisplayNameFor(m => m.MilitaryBase)</th>
+            <th>@Html.DisplayNameFor(m => m.SentSerialNumber)</th>
+            <th>@Html.DisplayNameFor(m => m.SentDate)</th>
+            <th>@Html.DisplayNameFor(m => m.ReceivedSerialNumber)</th>
+            <th>@Html.DisplayNameFor(m => m.ReceivedDate)</th>
+            <th>@Html.DisplayNameFor(m => m.PrivacyLevel)</th>
+            <th>@Html.DisplayNameFor(m => m.SendAwaySerialNumber)</th>
+            <th>@Html.DisplayNameFor(m => m.SendAwayDate)</th>
+            <th>@Html.DisplayNameFor(m => m.Executor)</th>
+            <th>@Html.DisplayNameFor(m => m.FormalizationSerialNumber)</th>
+            <th>@Html.DisplayNameFor(m => m.FormalizationDate)</th>
+            <th>@Html.DisplayNameFor(m => m.MilitaryRank)</th>
+            <th>@Html.DisplayNameFor(m => m.RegardingPosition)</th>
+            <th>@Html.DisplayNameFor(m => m.Position)</th>
+            <th>@Html.DisplayNameFor(m => m.AssignmentDate)</th>
+            <th>@Html.DisplayNameFor(m => m.Lastname)</th>
+            <th>@Html.DisplayNameFor(m => m.Firstname)</th>
+            <th>@Html.DisplayNameFor(m => m.Fathername)</th>
+            <th>@Html.DisplayNameFor(m => m.RejectionInfo)</th>
+            <th>@Html.DisplayNameFor(m => m.SentBackInfo)</th>
+            <th>@Html.DisplayNameFor(m => m.Note)</th>
             <th>Əməliyyatlar</th>
         </tr>
     </thead>

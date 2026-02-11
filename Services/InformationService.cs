@@ -268,36 +268,129 @@ namespace dttbidsmxbb.Services
             return true;
         }
 
-        public async Task<object> GetDashboardDataAsync()
+        public async Task<object> GetDashboardDataAsync(DateOnly? from = null, DateOnly? to = null)
         {
-            var byBase = await db.Informations
+            var query = db.Informations
                 .Where(x => !x.DeletedAt.HasValue)
+                .AsNoTracking();
+
+            if (from.HasValue)
+                query = query.Where(x => x.ReceivedDate >= from.Value);
+            if (to.HasValue)
+                query = query.Where(x => x.ReceivedDate <= to.Value);
+
+            var totalCount = await query.CountAsync();
+            var topSecretCount = await query.CountAsync(x => x.PrivacyLevel == Models.Enum.PrivacyLevel.TopSecret);
+            var secretCount = await query.CountAsync(x => x.PrivacyLevel == Models.Enum.PrivacyLevel.Secret);
+
+            var now = DateTime.UtcNow;
+            var thisMonthStart = new DateOnly(now.Year, now.Month, 1);
+            var thisMonthCount = await query.CountAsync(x => x.ReceivedDate >= thisMonthStart);
+
+            var byBase = await query
                 .GroupBy(x => x.MilitaryBase!.Name)
                 .Select(g => new { Label = g.Key, Count = g.Count() })
                 .OrderByDescending(x => x.Count)
                 .Take(15)
                 .ToListAsync();
 
-            var monthlyTrend = await db.Informations
-                .Where(x => !x.DeletedAt.HasValue)
-                .GroupBy(x => new { x.CreatedAt.Year, x.CreatedAt.Month })
-                .Select(g => new
-                {
-                    g.Key.Year,
-                    g.Key.Month,
-                    Count = g.Count()
-                })
+            var byRank = await query
+                .GroupBy(x => x.MilitaryRank!.Name)
+                .Select(g => new { Label = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(15)
+                .ToListAsync();
+
+            var byExecutor = await query
+                .GroupBy(x => x.Executor!.FullInfo)
+                .Select(g => new { Label = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToListAsync();
+
+            var monthlyTrend = await query
+                .GroupBy(x => new { x.ReceivedDate.Year, x.ReceivedDate.Month })
+                .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
+                .OrderBy(x => x.Year).ThenBy(x => x.Month)
+                .ToListAsync();
+
+            var sentToDtx = await query.CountAsync(x => !string.IsNullOrEmpty(x.SendAwaySerialNumber) || x.SendAwayDate.HasValue);
+            var formalized = await query.CountAsync(x => !string.IsNullOrEmpty(x.FormalizationSerialNumber) || x.FormalizationDate.HasValue);
+            var rejected = await query.CountAsync(x => !string.IsNullOrEmpty(x.RejectionInfo));
+            var sentBack = await query.CountAsync(x => !string.IsNullOrEmpty(x.SentBackInfo));
+
+            return new
+            {
+                totalCount,
+                topSecretCount,
+                secretCount,
+                thisMonthCount,
+                byBase = byBase.Select(x => new { label = x.Label, count = x.Count }),
+                byRank = byRank.Select(x => new { label = x.Label, count = x.Count }),
+                byExecutor = byExecutor.Select(x => new { label = x.Label, count = x.Count }),
+                monthlyTrend = monthlyTrend.Select(x => new { label = $"{x.Year}-{x.Month:D2}", count = x.Count }),
+                statusCounts = new { total = totalCount, sentToDtx, formalized, rejected, sentBack }
+            };
+        }
+
+        public async Task<object> GetBaseBreakdownAsync(int baseId, DateOnly? from = null, DateOnly? to = null)
+        {
+            var query = db.Informations
+                .Where(x => !x.DeletedAt.HasValue && x.MilitaryBaseId == baseId)
+                .AsNoTracking();
+
+            if (from.HasValue)
+                query = query.Where(x => x.ReceivedDate >= from.Value);
+            if (to.HasValue)
+                query = query.Where(x => x.ReceivedDate <= to.Value);
+
+            var breakdown = await query
+                .GroupBy(x => x.MilitaryRank!.Name)
+                .Select(g => new { Label = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .ToListAsync();
+
+            var trend = await query
+                .GroupBy(x => new { x.ReceivedDate.Year, x.ReceivedDate.Month })
+                .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
                 .OrderBy(x => x.Year).ThenBy(x => x.Month)
                 .ToListAsync();
 
             return new
             {
-                byBase,
-                monthlyTrend = monthlyTrend.Select(x => new
-                {
-                    label = $"{x.Year}-{x.Month:D2}",
-                    count = x.Count
-                })
+                breakdown = breakdown.Select(x => new { label = x.Label, count = x.Count }),
+                trend = trend.Select(x => new { label = $"{x.Year}-{x.Month:D2}", count = x.Count })
+            };
+        }
+
+        public async Task<object> GetRankBreakdownAsync(int rankId, DateOnly? from = null, DateOnly? to = null)
+        {
+            var query = db.Informations
+                .Where(x => !x.DeletedAt.HasValue && x.MilitaryRankId == rankId)
+                .AsNoTracking();
+
+            if (from.HasValue)
+                query = query.Where(x => x.ReceivedDate >= from.Value);
+            if (to.HasValue)
+                query = query.Where(x => x.ReceivedDate <= to.Value);
+
+            var breakdown = await query
+                .GroupBy(x => x.MilitaryBase!.Name)
+                .Select(g => new { Label = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(15)
+                .ToListAsync();
+
+            var trend = await query
+                .GroupBy(x => new { x.ReceivedDate.Year, x.ReceivedDate.Month })
+                .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
+                .OrderBy(x => x.Year).ThenBy(x => x.Month)
+                .ToListAsync();
+
+            return new
+            {
+                breakdown = breakdown.Select(x => new { label = x.Label, count = x.Count }),
+                trend = trend.Select(x => new { label = $"{x.Year}-{x.Month:D2}", count = x.Count })
             };
         }
     }

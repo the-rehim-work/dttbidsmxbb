@@ -80,11 +80,9 @@ namespace dttbidsmxbb.Models
         public virtual Executor? Executor { get; set; }
 
         [Display(Name = "Rəsmiləşdirilmiş buraxılış vərəqəsinin nömrəsi")]
-        [Required(ErrorMessage = "{0} sahəsi mütləqdir.")]
         public string? FormalizationSerialNumber { get; set; } = string.Empty;
 
         [Display(Name = "Rəsmiləşdirilmiş buraxılış vərəqəsinin tarixi")]
-        [Required(ErrorMessage = "{0} sahəsi mütləqdir.")]
         public DateOnly? FormalizationDate { get; set; }
 
         [Display(Name = "DTX tərəfindən şəxsin buraxılış sənədlərinə imtina bildirilməsi barədə məlumat")]

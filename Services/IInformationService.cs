@@ -11,6 +11,8 @@ namespace dttbidsmxbb.Services
         Task<bool> UpdateAsync(Information entity);
         Task<bool> SoftDeleteAsync(int id);
         Task<bool> RestoreAsync(int id);
-        Task<object> GetDashboardDataAsync();
+        Task<object> GetDashboardDataAsync(DateOnly? from = null, DateOnly? to = null);
+        Task<object> GetBaseBreakdownAsync(int baseId, DateOnly? from = null, DateOnly? to = null);
+        Task<object> GetRankBreakdownAsync(int rankId, DateOnly? from = null, DateOnly? to = null);
     }
 }

@@ -5,13 +5,12 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">İstifadəçilər</h4>
-    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">Yeni istifadəçi</button>
+    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#upsertUserModal" onclick="openCreateUser()">Yeni istifadəçi</button>
 </div>
 
-<table id="usersTable" class="table table-bordered table-sm">
+<table id="usersTable" class="table table-striped table-sm w-100">
     <thead>
         <tr>
-            <th>№</th>
             <th>İstifadəçi adı</th>
             <th>Ad Soyad</th>
             <th>Rol</th>
@@ -21,18 +20,28 @@
     <tbody>
         @if (users != null)
         {
-            var i = 1;
             foreach (var u in users)
             {
                 <tr>
-                    <td>@(i++)</td>
                     <td>@u.UserName</td>
                     <td>@u.FullName</td>
                     <td>@u.Roles</td>
                     <td>
-                        <button class="btn btn-warning btn-sm" onclick="openEditUser(@u.Id, '@u.FullName', '@u.Roles')">Redaktə</button>
-                        <button class="btn btn-info btn-sm text-white" onclick="openResetPassword(@u.Id)">Şifrə</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteUser(@u.Id)">Sil</button>
+                        <button class="btn btn-warning btn-sm edit-btn"
+                                data-id="@u.Id"
+                                data-fullname="@u.FullName"
+                                data-username="@u.UserName"
+                                data-role="@u.Roles">
+                            Redaktə
+                        </button>
+                        <button class="btn btn-info btn-sm text-white reset-btn"
+                                data-id="@u.Id">
+                            Şifrə
+                        </button>
+                        <button class="btn btn-danger btn-sm delete-btn"
+                                data-id="@u.Id">
+                            Sil
+                        </button>
                     </td>
                 </tr>
             }
@@ -40,64 +49,59 @@
     </tbody>
 </table>
 
-<div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="upsertUserModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Yeni istifadəçi</h5>
+                <h5 class="modal-title" id="upsertUserTitle">Yeni istifadəçi</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">İstifadəçi adı</label>
-                    <input type="text" id="createUserName" class="form-control" />
-                </div>
+                <input type="hidden" id="userId" />
                 <div class="mb-3">
                     <label class="form-label">Ad Soyad</label>
-                    <input type="text" id="createFullName" class="form-control" />
+                    <input type="text" id="fullName" class="form-control" />
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Şifrə</label>
-                    <input type="password" id="createPassword" class="form-control" />
+                    <label class="form-label">İstifadəçi adı</label>
+                    <input type="text" id="userName" class="form-control" />
+                </div>
+                <div id="passwordGroup">
+                    <div class="mb-3">
+                        <label class="form-label">Şifrə</label>
+                        <input type="password" id="password" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Şifrə təsdiqi</label>
+                        <input type="password" id="confirmPassword" class="form-control" />
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Rol</label>
-                    <select id="createRole" asp-items="@ViewBag.Roles" class="form-select">
+                    <select id="role" asp-items="@ViewBag.Roles" class="form-select">
                         <option value="">Seçin...</option>
                     </select>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ləğv et</button>
-                <button type="button" class="btn btn-primary" onclick="createUser()">Yarat</button>
+                <button type="button" id="saveUserBtn" class="btn btn-primary">Yadda saxla</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">İstifadəçini redaktə et</h5>
+                <h5 class="modal-title">Silmə təsdiqi</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <input type="hidden" id="editUserId" />
-                <div class="mb-3">
-                    <label class="form-label">Ad Soyad</label>
-                    <input type="text" id="editFullName" class="form-control" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Rol</label>
-                    <select id="editRole" asp-items="@ViewBag.Roles" class="form-select">
-                        <option value="">Seçin...</option>
-                    </select>
-                </div>
-            </div>
+            <div class="modal-body">Bu istifadəçini silmək istədiyinizə əminsiniz?</div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ləğv et</button>
-                <button type="button" class="btn btn-primary" onclick="updateUser()">Yenilə</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Xeyr</button>
+                <button type="button" id="confirmDeleteUserBtn" class="btn btn-danger">Sil</button>
             </div>
         </div>
     </div>
@@ -114,12 +118,16 @@
                 <input type="hidden" id="resetUserId" />
                 <div class="mb-3">
                     <label class="form-label">Yeni şifrə</label>
-                    <input type="password" id="resetNewPassword" class="form-control" />
+                    <input type="password" id="newPassword" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Şifrə təsdiqi</label>
+                    <input type="password" id="confirmNewPassword" class="form-control" />
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ləğv et</button>
-                <button type="button" class="btn btn-primary" onclick="resetPassword()">Sıfırla</button>
+                <button type="button" id="resetPasswordBtn" class="btn btn-primary">Sıfırla</button>
             </div>
         </div>
     </div>

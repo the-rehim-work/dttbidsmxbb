@@ -36,8 +36,13 @@ namespace dttbidsmxbb.Controllers
 
         public async Task<IActionResult> Create()
         {
+            var today = DateTime.Now;
+            Information info = new();
+            info.SentDate = DateOnly.FromDateTime(today);
+            info.ReceivedDate = DateOnly.FromDateTime(today);
+            info.AssignmentDate = DateOnly.FromDateTime(today);
             await PopulateViewBagsAsync();
-            return View("Upsert", new Information());
+            return View("Upsert", info);
         }
 
         [HttpPost]
@@ -55,14 +60,14 @@ namespace dttbidsmxbb.Controllers
             await logService.LogAuditAsync(
                 user!.Id,
                 user.FullName ?? user.UserName!,
-                "Yaradıldı",
+                "Əlavə olundu",
                 "Information",
                 entity.Id,
                 null,
                 JsonSerializer.Serialize(entity, JsonOpts));
 
             TempData["ToastType"] = "success";
-            TempData["ToastMessage"] = "Məlumat uğurla yaradıldı.";
+            TempData["ToastMessage"] = "Məlumat uğurla əlavə olundu.";
             return RedirectToAction("Index");
         }
 

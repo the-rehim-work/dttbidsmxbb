@@ -1,5 +1,4 @@
 @model List<MilitaryBase>
-
 @{
     ViewData["Title"] = "Hərbi hissələr";
 }
@@ -9,23 +8,21 @@
     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#upsertModal" onclick="openCreate()">Yeni hərbi hissə</button>
 </div>
 
-<table id="lookupTable" class="table table-bordered table-sm">
+<table id="lookupTable" class="table table-striped table-sm w-100">
     <thead>
         <tr>
-            <th>№</th>
             <th>Ad</th>
-            <th>Əməliyyatlar</th>
+            <th style="width: 150px;">Əməliyyatlar</th>
         </tr>
     </thead>
     <tbody>
         @for (int i = 0; i < Model.Count; i++)
         {
             <tr>
-                <td>@(i + 1)</td>
                 <td>@Model[i].Name</td>
                 <td>
-                    <button class="btn btn-warning btn-sm" onclick="openEdit(@Model[i].Id, '@Model[i].Name.Replace("'", "\\'")') ">Redaktə</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteItem(@Model[i].Id)">Sil</button>
+                    <button class="btn btn-warning btn-sm edit-btn" data-id="@Model[i].Id" data-name="@Model[i].Name">Redaktə</button>
+                    <button class="btn btn-danger btn-sm delete-btn" data-id="@Model[i].Id">Sil</button>
                 </td>
             </tr>
         }
@@ -49,6 +46,22 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ləğv et</button>
                 <button type="button" id="saveBtn" class="btn btn-primary" onclick="save()">Yadda saxla</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Silmə təsdiqi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">Bu hərbi hissəni silmək istədiyinizə əminsiniz?</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Xeyr</button>
+                <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Sil</button>
             </div>
         </div>
     </div>

@@ -15,11 +15,11 @@
         if (!el) return;
         filterPickers[id] = flatpickr(el, {
             mode: 'range',
-            dateFormat: 'Y-m-d',
+            dateFormat: 'd-m-Y',
             altInput: true,
             altFormat: 'd.m.Y',
             locale: 'az',
-            allowInput: false
+            allowInput: true
         });
     });
 
@@ -111,6 +111,13 @@
         return data;
     }
 
+    function fmtDate(d) {
+        if (!d) return '';
+        var parts = d.split('-');
+        if (parts.length === 3) return parts[2] + '.' + parts[1] + '.' + parts[0];
+        return d;
+    }
+
     function countActiveFilters() {
         var count = Object.keys(getFilterData()).length;
         var badge = $('#activeFilterCount');
@@ -146,37 +153,41 @@
         order: [[5, 'desc']],
         pageLength: 25,
         lengthMenu: [10, 25, 50, 100],
-        fixedColumns: { start: 0, end: 1 },
+        fixedColumns: {
+            start: 0,
+            end: 1
+        },
         columns: [
-            { data: 'senderMilitaryBase', render: function (d) { return d ? d.name : ''; } },
-            { data: 'militaryBase', render: function (d) { return d ? d.name : ''; } },
-            { data: 'sentSerialNumber' },
-            { data: 'sentDate' },
-            { data: 'receivedSerialNumber' },
-            { data: 'receivedDate' },
-            { data: 'militaryRank', render: function (d) { return d ? d.name : ''; } },
-            { data: 'regardingPosition' },
-            { data: 'position' },
-            { data: 'lastname', defaultContent: '' },
-            { data: 'firstname' },
-            { data: 'fathername', defaultContent: '' },
-            { data: 'assignmentDate' },
-            { data: 'privacyLevel', render: function (d) { return d === 1 ? 'Tam məxfi' : 'Məxfi'; } },
-            { data: 'sendAwaySerialNumber', defaultContent: '' },
-            { data: 'sendAwayDate', defaultContent: '' },
-            { data: 'executor', render: function (d) { return d ? d.fullInfo : ''; } },
-            { data: 'formalizationSerialNumber', defaultContent: '' },
-            { data: 'formalizationDate', defaultContent: '' },
-            { data: 'rejectionInfo', defaultContent: '' },
-            { data: 'sentBackInfo', defaultContent: '' },
-            { data: 'note', defaultContent: '' },
+            { data: 'senderMilitaryBase', width: '150px', render: function (d) { return d ? d.name : ''; } },
+            { data: 'militaryBase', width: '150px', render: function (d) { return d ? d.name : ''; } },
+            { data: 'sentSerialNumber', width: '100px' },
+            { data: 'sentDate', width: '150px', render: fmtDate },
+            { data: 'receivedSerialNumber', width: '100px' },
+            { data: 'receivedDate', width: '150px', render: fmtDate },
+            { data: 'militaryRank', width: '150px', render: function (d) { return d ? d.name : ''; } },
+            { data: 'regardingPosition', width: '250px' },
+            { data: 'position', width: '250px' },
+            { data: 'lastname', defaultContent: '', width: '200px' },
+            { data: 'firstname', width: '200px' },
+            { data: 'fathername', defaultContent: '', width: '200px' },
+            { data: 'assignmentDate', width: '150px', render: fmtDate },
+            { data: 'privacyLevel', width: '100px', render: function (d) { return d === 1 ? 'Tam məxfi' : 'Məxfi'; } },
+            { data: 'sendAwaySerialNumber', defaultContent: '', width: '100px' },
+            { data: 'sendAwayDate', defaultContent: '', width: '150px', render: fmtDate },
+            { data: 'executor', width: '250px', render: function (d) { return d ? d.fullInfo : ''; } },
+            { data: 'formalizationSerialNumber', defaultContent: '', width: '100px' },
+            { data: 'formalizationDate', defaultContent: '', width: '150px', render: fmtDate },
+            { data: 'rejectionInfo', defaultContent: '', width: '300px' },
+            { data: 'sentBackInfo', defaultContent: '', width: '300px' },
+            { data: 'note', defaultContent: '', width: '200px' },
             {
                 data: null,
                 orderable: false,
                 searchable: false,
+                width: '150px',
                 render: function (data) {
                     if (data.deletedAt) {
-                        return '<button class="btn btn-success btn-sm restore-btn" data-id="' + data.id + '">Bərpa</button>';
+                        return '<button class="btn btn-success btn-sm restore-btn opacity-100" data-id="' + data.id + '">Bərpa</button>';
                     }
                     return '<a href="/Informations/Edit/' + data.id + '" class="btn btn-warning btn-sm">Redaktə</a> ' +
                         '<button class="btn btn-danger btn-sm delete-btn" data-id="' + data.id + '">Sil</button>';

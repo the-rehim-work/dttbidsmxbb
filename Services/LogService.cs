@@ -60,9 +60,9 @@ namespace dttbidsmxbb.Services
             {
                 var search = request.SearchValue.ToLower();
                 query = query.Where(x =>
-                    x.UserFullName.ToLower().Contains(search) ||
-                    x.Action.ToLower().Contains(search) ||
-                    x.EntityName.ToLower().Contains(search));
+                    x.UserFullName.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
+                    x.Action.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
+                    x.EntityName.Contains(search, StringComparison.CurrentCultureIgnoreCase));
             }
 
             var filteredCount = await query.CountAsync();
@@ -98,7 +98,7 @@ namespace dttbidsmxbb.Services
             {
                 var search = request.SearchValue.ToLower();
                 query = query.Where(x =>
-                    x.Username.ToLower().Contains(search) ||
+                    x.Username.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
                     x.IpAddress.Contains(search));
             }
 
@@ -134,9 +134,9 @@ namespace dttbidsmxbb.Services
             {
                 var search = request.SearchValue.ToLower();
                 query = query.Where(x =>
-                    (x.UserFullName != null && x.UserFullName.ToLower().Contains(search)) ||
-                    x.Path.ToLower().Contains(search) ||
-                    x.Method.ToLower().Contains(search));
+                    (x.UserFullName != null && x.UserFullName.Contains(search, StringComparison.CurrentCultureIgnoreCase)) ||
+                    x.Path.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
+                    x.Method.Contains(search, StringComparison.CurrentCultureIgnoreCase));
             }
 
             var filteredCount = await query.CountAsync();
