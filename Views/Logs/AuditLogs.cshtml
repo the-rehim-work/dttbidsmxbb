@@ -2,22 +2,28 @@
     ViewData["Title"] = "Audit loqları";
 }
 
-<h4 class="mb-3">Audit loqları</h4>
+<div class="container-fluid">
+    <h4 class="mb-4">Audit loqları</h4>
 
-<table id="logsTable" class="table table-bordered table-sm" style="font-size: 0.85rem;">
-    <thead>
-        <tr>
-            <th>İstifadəçi</th>
-            <th>Əməliyyat</th>
-            <th>Cədvəl</th>
-            <th>Qeyd ID</th>
-            <th>Tarix</th>
-            <th>Ətraflı</th>
-        </tr>
-    </thead>
-</table>
+    <div class="card shadow-sm border-0">
+        <div class="card-body position-relative" style="min-height: 400px;">
+            <table id="logsTable" class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>İstifadəçi</th>
+                        <th>Əməliyyat</th>
+                        <th>Cədvəl</th>
+                        <th>Qeyd ID</th>
+                        <th>Tarix</th>
+                        <th class="text-center">Ətraflı</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
 
-<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="detailModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
@@ -25,14 +31,14 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="row">
+                <div class="row g-3">
                     <div class="col-md-6">
-                        <h6>Köhnə dəyərlər</h6>
-                        <pre id="oldValues" class="bg-light p-3" style="max-height: 400px; overflow: auto; font-size: 0.8rem;"></pre>
+                        <h6 class="text-muted mb-2">Köhnə dəyərlər</h6>
+                        <pre id="oldValues" class="bg-light p-3 rounded border" style="max-height: 450px; overflow: auto; font-size: 0.875rem; margin: 0;"></pre>
                     </div>
                     <div class="col-md-6">
-                        <h6>Yeni dəyərlər</h6>
-                        <pre id="newValues" class="bg-light p-3" style="max-height: 400px; overflow: auto; font-size: 0.8rem;"></pre>
+                        <h6 class="text-muted mb-2">Yeni dəyərlər</h6>
+                        <pre id="newValues" class="bg-light p-3 rounded border" style="max-height: 450px; overflow: auto; font-size: 0.875rem; margin: 0;"></pre>
                     </div>
                 </div>
             </div>
@@ -41,11 +47,43 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/logs.js"></script>
     <script>
-        var logConfig = {
-            url: '@Url.Action("LoadAuditLogs", "Logs")',
-            type: 'audit'
-        };
+        $(function () {
+            const table = window.dttbidsmxbb.initLogsTable({
+                url: '@Url.Action("LoadAuditLogs", "Logs")',
+                columns: [
+                    { data: 'userFullName', className: 'fw-medium' },
+                    {
+                        data: 'action',
+                        render: function (data) {
+                            const badges = { 'Yaradıldı': 'success', 'Yeniləndi': 'primary', 'Silindi': 'danger' };
+                            const variant = badges[data] || 'secondary';
+                            return '<span class="badge bg-' + variant + '">' + data + '</span>';
+                        }
+                    },
+                    { data: 'entityName', className: 'font-monospace text-muted small' },
+                    { data: 'entityId', className: 'text-center' },
+                    { data: 'timestamp', render: window.dttbidsmxbb.formatTimestamp },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: 'text-center',
+                        render: function (data) {
+                            if (!data.oldValues && !data.newValues) return '—';
+                            return '<button class="btn btn-sm btn-outline-primary detail-btn">Bax</button>';
+                        }
+                    }
+                ]
+            });
+
+            $('#logsTable').on('click', '.detail-btn', function () {
+                const rowData = table.row($(this).closest('tr')).data();
+                if (!rowData) return;
+                $('#oldValues').text(window.dttbidsmxbb.formatJson(rowData.oldValues));
+                $('#newValues').text(window.dttbidsmxbb.formatJson(rowData.newValues));
+                new bootstrap.Modal('#detailModal').show();
+            });
+        });
     </script>
-    <script src="~/js/logs.js" asp-append-version="true"></script>
 }

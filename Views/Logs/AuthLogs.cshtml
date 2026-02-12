@@ -2,25 +2,46 @@
     ViewData["Title"] = "Giriş loqları";
 }
 
-<h4 class="mb-3">Giriş loqları</h4>
+<div class="container-fluid">
+    <h4 class="mb-4">Giriş loqları</h4>
 
-<table id="logsTable" class="table table-bordered table-sm" style="font-size: 0.85rem;">
-    <thead>
-        <tr>
-            <th>İstifadəçi</th>
-            <th>Nəticə</th>
-            <th>IP ünvan</th>
-            <th>Tarix</th>
-        </tr>
-    </thead>
-</table>
+    <div class="card shadow-sm border-0">
+        <div class="card-body position-relative" style="min-height: 400px;">
+            <table id="logsTable" class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>İstifadəçi</th>
+                        <th class="text-center">Nəticə</th>
+                        <th>IP ünvan</th>
+                        <th>Tarix</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
+    <script src="~/js/logs.js"></script>
     <script>
-        var logConfig = {
-            url: '@Url.Action("LoadAuthLogs", "Logs")',
-            type: 'auth'
-        };
+        $(function () {
+            window.dttbidsmxbb.initLogsTable({
+                url: '@Url.Action("LoadAuthLogs", "Logs")',
+                columns: [
+                    { data: 'username', className: 'fw-medium' },
+                    {
+                        data: 'success',
+                        className: 'text-center',
+                        render: function (data, type, row) {
+                            if (data) return '<span class="badge bg-success">Uğurlu</span>';
+                            const reason = row.failureReason ? ' title="' + row.failureReason + '"' : '';
+                            return '<span class="badge bg-danger"' + reason + '>Uğursuz</span>';
+                        }
+                    },
+                    { data: 'ipAddress', className: 'font-monospace' },
+                    { data: 'timestamp', render: window.dttbidsmxbb.formatTimestamp }
+                ]
+            });
+        });
     </script>
-    <script src="~/js/logs.js" asp-append-version="true"></script>
 }

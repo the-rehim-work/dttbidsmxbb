@@ -8,41 +8,30 @@ namespace dttbidsmxbb.Controllers
     [Authorize(Roles = "Admin")]
     public class LogsController(ILogService logService) : Controller
     {
-        public IActionResult AuditLogs()
-        {
-            return View();
-        }
-
-        public IActionResult AuthLogs()
-        {
-            return View();
-        }
-
-        public IActionResult EventLogs()
-        {
-            return View();
-        }
+        public IActionResult AuditLogs() => View();
+        public IActionResult AuthLogs() => View();
+        public IActionResult EventLogs() => View();
 
         [HttpPost]
-        public async Task<IActionResult> LoadAuditLogs()
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoadAuditLogs([FromForm] DataTableRequest request)
         {
-            var request = DataTableRequest.Parse(Request.Form);
             var result = await logService.GetAuditLogsAsync(request);
             return Json(result);
         }
 
         [HttpPost]
-        public async Task<IActionResult> LoadAuthLogs()
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoadAuthLogs([FromForm] DataTableRequest request)
         {
-            var request = DataTableRequest.Parse(Request.Form);
             var result = await logService.GetAuthLogsAsync(request);
             return Json(result);
         }
 
         [HttpPost]
-        public async Task<IActionResult> LoadEventLogs()
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoadEventLogs([FromForm] DataTableRequest request)
         {
-            var request = DataTableRequest.Parse(Request.Form);
             var result = await logService.GetEventLogsAsync(request);
             return Json(result);
         }

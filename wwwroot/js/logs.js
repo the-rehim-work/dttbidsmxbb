@@ -1,112 +1,74 @@
-﻿$(function () {
-    if (typeof logConfig === 'undefined') return;
+﻿window.dttbidsmxbb = window.dttbidsmxbb || {};
 
-    var token = window.dttbidsmxbb.getToken();
-
-    function fmtTimestamp(d) {
-        if (!d) return '';
-        var dt = new Date(d);
-        if (isNaN(dt)) return d;
-        var dd = String(dt.getDate()).padStart(2, '0');
-        var mm = String(dt.getMonth() + 1).padStart(2, '0');
-        var yy = dt.getFullYear();
-        var hh = String(dt.getHours()).padStart(2, '0');
-        var mi = String(dt.getMinutes()).padStart(2, '0');
-        var ss = String(dt.getSeconds()).padStart(2, '0');
-        return dd + '.' + mm + '.' + yy + ' ' + hh + ':' + mi + ':' + ss;
-    }
-
-    var columnDefs = {
-        audit: [
-            { data: 'userFullName', width: '150px' },
-            { data: 'action', width: '120px' },
-            { data: 'entityName', width: '120px' },
-            { data: 'entityId', width: '80px' },
-            { data: 'timestamp', width: '160px', render: fmtTimestamp },
-            {
-                data: null,
-                orderable: false,
-                width: '70px',
-                render: function (data) {
-                    if (!data.oldValues && !data.newValues) return '-';
-                    return '<button class="btn btn-info btn-sm text-white detail-btn" data-row-id="' + data.id + '">Bax</button>';
-                }
-            }
-        ],
-        auth: [
-            { data: 'username', width: '200px' },
-            {
-                data: 'success',
-                width: '100px',
-                render: function (d) {
-                    return d
-                        ? '<span class="badge bg-success">Uğurlu</span>'
-                        : '<span class="badge bg-danger">Uğursuz</span>';
-                }
-            },
-            { data: 'ipAddress', width: '150px' },
-            { data: 'timestamp', width: '160px', render: fmtTimestamp }
-        ],
-        event: [
-            { data: 'userFullName', defaultContent: '-', width: '150px' },
-            { data: 'method', width: '80px' },
-            { data: 'path', width: '300px' },
-            { data: 'statusCode', width: '80px' },
-            { data: 'timestamp', width: '160px', render: fmtTimestamp }
-        ]
-    };
-
-    var columns = columnDefs[logConfig.type];
-    if (!columns) return;
-
-    var sortCol = columns.length - (logConfig.type === 'audit' ? 2 : 1);
-
-    var table = $('#logsTable').DataTable({
-        processing: true,
+window.dttbidsmxbb.initLogsTable = function (config) {
+    const defaults = {
+        processing: false,
         serverSide: true,
         paging: true,
-        scrollX: true,
+        scrollX: false,
         autoWidth: false,
-        order: [[sortCol, 'desc']],
-        pageLength: 25,
+        pageLength: 50,
+        lengthMenu: [[25, 50, 100, 200], [25, 50, 100, 200]],
+        dom: '<"row mb-3"<"col-sm-12 col-md-3"l><"col-sm-12 col-md-9"f>>rt<"row mt-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
         language: {
-            search: 'Axtar:',
+            search: '',
+            searchPlaceholder: 'Axtar...',
             lengthMenu: '_MENU_ sətir',
-            info: '_TOTAL_ nəticədən _START_ - _END_',
-            infoEmpty: 'Nəticə yoxdur',
-            infoFiltered: '(ümumi _MAX_)',
-            zeroRecords: 'Nəticə tapılmadı',
-            processing: 'Yüklənir...',
-            paginate: { previous: '‹', next: '›' }
-        },
-        ajax: {
-            url: logConfig.url,
-            type: 'POST',
-            beforeSend: function (xhr) {
-                if (token) xhr.setRequestHeader('RequestVerificationToken', token);
+            info: '_START_-_END_ / _TOTAL_',
+            infoEmpty: '0 nəticə',
+            infoFiltered: '(ümumi: _MAX_)',
+            zeroRecords: 'Heç bir nəticə tapılmadı',
+            paginate: {
+                previous: '‹',
+                next: '›'
             }
         },
-        columns: columns,
-        initComplete: function () { $('#tableLoader').fadeOut(150); }
-    });
-
-    if (logConfig.type === 'audit') {
-        $('#logsTable').on('click', '.detail-btn', function () {
-            var rowData = table.row($(this).closest('tr')).data();
-            if (!rowData) return;
-            $('#oldValues').text(formatJson(rowData.oldValues));
-            $('#newValues').text(formatJson(rowData.newValues));
-            new bootstrap.Modal('#detailModal').show();
-        });
-    }
-
-    function formatJson(val) {
-        if (!val) return '(yoxdur)';
-        if (typeof val === 'object') {
-            try { return JSON.stringify(val, null, 2); }
-            catch (e) { return String(val); }
+        ajax: {
+            url: config.url,
+            type: 'POST',
+            beforeSend: function (xhr) {
+                const token = window.dttbidsmxbb.getToken();
+                if (token) xhr.setRequestHeader('RequestVerificationToken', token);
+            },
+            error: function (xhr) {
+                console.error('DataTable error:', xhr);
+            }
+        },
+        order: config.defaultOrder || [[config.columns.length - 1, 'desc']],
+        columns: config.columns,
+        initComplete: function () {
+            $('#tableLoader').hide();
+            $('#logsTable').show();
+            if (config.initComplete) {
+                config.initComplete.call(this);
+            }
         }
-        try { return JSON.stringify(JSON.parse(val), null, 2); }
-        catch (e) { return val; }
+    };
+
+    return $('#logsTable').DataTable(defaults);
+};
+
+window.dttbidsmxbb.formatTimestamp = function (timestamp) {
+    if (!timestamp) return '—';
+    const date = new Date(timestamp);
+    if (isNaN(date)) return timestamp;
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${day}.${month}.${year} ${hours}:${minutes}`;
+};
+
+window.dttbidsmxbb.formatJson = function (value) {
+    if (!value) return '(yoxdur)';
+
+    try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+        return JSON.stringify(parsed, null, 2);
+    } catch (e) {
+        return String(value);
     }
-});
+};
