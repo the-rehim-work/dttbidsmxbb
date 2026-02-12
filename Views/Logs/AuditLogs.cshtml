@@ -1,6 +1,31 @@
 @{
     ViewData["Title"] = "Audit loqları";
 }
+<style>
+    .bg-gray {
+        background-color: #adb5bd !important;
+    }
+
+    .bg-purple {
+        background-color: #6f42c1 !important;
+    }
+
+    .bg-orange {
+        background-color: #fd7e14 !important;
+    }
+
+    .bg-teal {
+        background-color: #20c997 !important;
+    }
+
+    .bg-cyan {
+        background-color: #0dcaf0 !important;
+    }
+
+    .bg-indigo {
+        background-color: #6610f2 !important;
+    }
+</style>
 
 <form id="__tokenForm" method="post" style="display:none;">
     @Html.AntiForgeryToken()
@@ -54,6 +79,20 @@
     <script src="~/js/logs.js"></script>
     <script>
         $(function () {
+            const actionStyles = [
+                { keywords: ['Əlavə'], badge: 'bg-success text-white' },
+                { keywords: ['Redaktə'], badge: 'bg-primary text-white' },
+                { keywords: ['Bərpa'], badge: 'bg-teal text-white' },
+                { keywords: ['Silindi'], badge: 'bg-danger text-white' },
+                { keywords: ['İxrac'], badge: 'bg-cyan text-dark' },
+                { keywords: ['İdxal'], badge: 'bg-indigo text-white' },
+                { keywords: ['Ehtiyat'], badge: 'bg-warning text-dark' },
+                { keywords: ['Login'], badge: 'bg-dark text-white' },
+                { keywords: ['Logout'], badge: 'bg-gray text-dark' },
+                { keywords: ['Bloklandı'], badge: 'bg-purple text-white' },
+                { keywords: ['Xəta'], badge: 'bg-orange text-white' }
+            ];
+
             var table = window.dttbidsmxbb.initLogsTable({
                 url: '@Url.Action("LoadAuditLogs", "Logs")',
                 defaultOrder: [[4, 'desc']],
@@ -62,13 +101,14 @@
                     {
                         data: 'action',
                         render: function (data) {
-                            var variant = 'secondary';
-                            if (data.indexOf('Əlavə') !== -1) variant = 'success';
-                            else if (data.indexOf('Redaktə') !== -1 || data.indexOf('Bərpa') !== -1) variant = 'primary';
-                            else if (data.indexOf('Silindi') !== -1) variant = 'danger';
-                            else if (data.indexOf('İxrac') !== -1) variant = 'info';
-                            else if (data.indexOf('İdxal') !== -1 || data.indexOf('Ehtiyat') !== -1) variant = 'warning';
-                            return '<span class="badge bg-' + variant + '">' + data + '</span>';
+                            let style = 'bg-gray text-dark';
+                            for (const rule of actionStyles) {
+                                if (rule.keywords.some(k => data.includes(k))) {
+                                    style = rule.badge;
+                                    break;
+                                }
+                            }
+                            return `<span class="badge ${style} px-3 py-2">${data}</span>`;
                         }
                     },
                     { data: 'entityName', className: 'font-monospace text-muted small' },

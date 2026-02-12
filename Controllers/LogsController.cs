@@ -13,16 +13,18 @@ namespace dttbidsmxbb.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoadAuditLogs([FromForm] DataTableRequest request)
+        public async Task<IActionResult> LoadAuditLogs()
         {
+            var request = DataTableRequest.Parse(Request.Form);
             var result = await logService.GetAuditLogsAsync(request);
             return Json(result);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoadAuthLogs([FromForm] DataTableRequest request)
+        public async Task<IActionResult> LoadAuthLogs()
         {
+            var request = DataTableRequest.Parse(Request.Form);
             var result = await logService.GetAuthLogsAsync(request);
             return Json(result);
         }
