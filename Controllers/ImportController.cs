@@ -1,11 +1,16 @@
-﻿using dttbidsmxbb.Services;
+﻿using dttbidsmxbb.Models;
+using dttbidsmxbb.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace dttbidsmxbb.Controllers
 {
     [Authorize]
-    public class ImportController(IImportService importService) : Controller
+    public class ImportController(
+    IImportService importService,
+    ILogService logService,
+    UserManager<AppUser> userManager) : Controller
     {
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -20,6 +25,11 @@ namespace dttbidsmxbb.Controllers
 
             using var stream = file.OpenReadStream();
             var result = await importService.ImportAsync(stream, file.FileName, useAsDb);
+
+            await LogImportAsync(
+                useAsDb ? "İdxal (DB əvəz)" : "İdxal",
+                file.FileName,
+                result);
 
             return Json(new
             {
@@ -50,6 +60,11 @@ namespace dttbidsmxbb.Controllers
             using var stream = file.OpenReadStream();
             var result = await importService.ImportBackupAsync(stream, cleanMode);
 
+            await LogImportAsync(
+                cleanMode ? "Ehtiyat bərpa (təmiz)" : "Ehtiyat bərpa (əlavə)",
+                file.FileName,
+                result);
+
             var msg = result.ImportedRows > 0
                 ? $"{result.ImportedRows} məlumat əlavə edildi."
                 : "Heç bir məlumat əlavə edilmədi.";
@@ -66,6 +81,20 @@ namespace dttbidsmxbb.Controllers
                 result.Errors,
                 message = msg
             });
+        }
+
+        private async Task LogImportAsync(string action, string fileName, Models.DTOs.ImportResult result)
+        {
+            var user = await userManager.GetUserAsync(User);
+            if (user == null) return;
+            await logService.LogAuditAsync(
+                user.Id,
+                user.FullName ?? user.UserName!,
+                action,
+                "Information",
+                0,
+                null,
+                $"{{\"fileName\":\"{fileName}\",\"total\":{result.TotalRows},\"imported\":{result.ImportedRows},\"skipped\":{result.SkippedRows},\"success\":{result.Success.ToString().ToLower()}}}");
         }
     }
 }

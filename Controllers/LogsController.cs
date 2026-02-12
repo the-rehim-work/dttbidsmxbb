@@ -10,7 +10,6 @@ namespace dttbidsmxbb.Controllers
     {
         public IActionResult AuditLogs() => View();
         public IActionResult AuthLogs() => View();
-        public IActionResult EventLogs() => View();
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -25,14 +24,6 @@ namespace dttbidsmxbb.Controllers
         public async Task<IActionResult> LoadAuthLogs([FromForm] DataTableRequest request)
         {
             var result = await logService.GetAuthLogsAsync(request);
-            return Json(result);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoadEventLogs([FromForm] DataTableRequest request)
-        {
-            var result = await logService.GetEventLogsAsync(request);
             return Json(result);
         }
     }

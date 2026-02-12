@@ -1,12 +1,18 @@
-﻿using dttbidsmxbb.Models.DTOs;
+﻿using dttbidsmxbb.Models;
+using dttbidsmxbb.Models.DTOs;
 using dttbidsmxbb.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace dttbidsmxbb.Controllers
 {
     [Authorize]
-    public class ExportController(IInformationService informationService, IExportService exportService) : Controller
+    public class ExportController(
+    IInformationService informationService,
+    IExportService exportService,
+    ILogService logService,
+    UserManager<AppUser> userManager) : Controller
     {
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -14,6 +20,7 @@ namespace dttbidsmxbb.Controllers
         {
             var (data, cols) = await GetExportContext();
             var bytes = await exportService.ExportToPdfAsync(data, cols);
+            await LogExportAsync("PDF", data.Count);
             return File(bytes, "application/pdf", $"Məlumatlar_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
         }
 
@@ -23,6 +30,7 @@ namespace dttbidsmxbb.Controllers
         {
             var (data, cols) = await GetExportContext();
             var bytes = await exportService.ExportToExcelAsync(data, cols);
+            await LogExportAsync("Excel", data.Count);
             return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 $"Məlumatlar_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
         }
@@ -33,6 +41,7 @@ namespace dttbidsmxbb.Controllers
         {
             var (data, cols) = await GetExportContext();
             var bytes = await exportService.ExportToWordAsync(data, cols);
+            await LogExportAsync("Word", data.Count);
             return File(bytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 $"Məlumatlar_{DateTime.Now:yyyyMMdd_HHmmss}.docx");
         }
@@ -43,6 +52,7 @@ namespace dttbidsmxbb.Controllers
         {
             var (data, cols) = await GetExportContext();
             var html = exportService.GeneratePrintHtml(data, cols);
+            await LogExportAsync("Print", data.Count);
             return Content(html, "text/html");
         }
 
@@ -53,6 +63,7 @@ namespace dttbidsmxbb.Controllers
             var filter = InformationFilter.Parse(Request.Form);
             var data = await informationService.GetFilteredListAsync(filter.HasAnyFilter ? filter : null);
             var bytes = await exportService.ExportBackupAsync(data);
+            await LogExportAsync("Backup", data.Count);
             return File(bytes, "application/octet-stream", $"Ehtiyat_{DateTime.Now:yyyyMMdd_HHmmss}.dttbi");
         }
 
@@ -62,6 +73,20 @@ namespace dttbidsmxbb.Controllers
             var bytes = await exportService.GenerateImportTemplateAsync();
             return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "İdxal_Şablonu.xlsx");
+        }
+
+        private async Task LogExportAsync(string format, int recordCount)
+        {
+            var user = await userManager.GetUserAsync(User);
+            if (user == null) return;
+            await logService.LogAuditAsync(
+                user.Id,
+                user.FullName ?? user.UserName!,
+                $"İxrac ({format})",
+                "Information",
+                0,
+                null,
+                $"{{\"format\":\"{format}\",\"recordCount\":{recordCount}}}");
         }
 
         private async Task<(List<Models.Information>, int[]?)> GetExportContext()

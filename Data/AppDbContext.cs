@@ -12,7 +12,6 @@ namespace dttbidsmxbb.Data
         public DbSet<Information> Informations { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<AuthLog> AuthLogs { get; set; }
-        public DbSet<EventLog> EventLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

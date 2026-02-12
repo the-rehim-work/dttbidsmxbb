@@ -2,6 +2,10 @@
     ViewData["Title"] = "Giriş loqları";
 }
 
+<form id="__tokenForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
 <div class="container-fluid">
     <h4 class="mb-4">Giriş loqları</h4>
 
@@ -27,6 +31,7 @@
         $(function () {
             window.dttbidsmxbb.initLogsTable({
                 url: '@Url.Action("LoadAuthLogs", "Logs")',
+                defaultOrder: [[3, 'desc']],
                 columns: [
                     { data: 'username', className: 'fw-medium' },
                     {
@@ -34,7 +39,7 @@
                         className: 'text-center',
                         render: function (data, type, row) {
                             if (data) return '<span class="badge bg-success">Uğurlu</span>';
-                            const reason = row.failureReason ? ' title="' + row.failureReason + '"' : '';
+                            var reason = row.failureReason ? ' title="' + row.failureReason + '"' : '';
                             return '<span class="badge bg-danger"' + reason + '>Uğursuz</span>';
                         }
                     },

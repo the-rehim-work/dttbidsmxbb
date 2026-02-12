@@ -36,21 +36,6 @@ namespace dttbidsmxbb.Services
             await db.SaveChangesAsync();
         }
 
-        public async Task LogEventAsync(int? userId, string? userFullName, string method, string path, int statusCode, string ipAddress)
-        {
-            db.EventLogs.Add(new EventLog
-            {
-                UserId = userId,
-                UserFullName = userFullName,
-                Method = method,
-                Path = path,
-                StatusCode = statusCode,
-                IpAddress = ipAddress,
-                Timestamp = DateTime.UtcNow
-            });
-            await db.SaveChangesAsync();
-        }
-
         public async Task<DataTableResponse<AuditLog>> GetAuditLogsAsync(DataTableRequest request)
         {
             var query = db.AuditLogs.AsNoTracking();
@@ -60,22 +45,21 @@ namespace dttbidsmxbb.Services
             {
                 var search = request.SearchValue.ToLower();
                 query = query.Where(x =>
-                    x.UserFullName.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
-                    x.Action.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
-                    x.EntityName.Contains(search, StringComparison.CurrentCultureIgnoreCase));
+                    EF.Functions.Like(x.UserFullName.ToLower(), $"%{search}%") ||
+                    EF.Functions.Like(x.Action.ToLower(), $"%{search}%") ||
+                    EF.Functions.Like(x.EntityName.ToLower(), $"%{search}%"));
             }
 
             var filteredCount = await query.CountAsync();
 
             query = request.SortColumnIndex switch
             {
-                0 => request.SortDirection == "asc" ? query.OrderBy(x => x.Id) : query.OrderByDescending(x => x.Id),
-                1 => request.SortDirection == "asc" ? query.OrderBy(x => x.UserFullName) : query.OrderByDescending(x => x.UserFullName),
-                2 => request.SortDirection == "asc" ? query.OrderBy(x => x.Action) : query.OrderByDescending(x => x.Action),
-                3 => request.SortDirection == "asc" ? query.OrderBy(x => x.EntityName) : query.OrderByDescending(x => x.EntityName),
-                4 => request.SortDirection == "asc" ? query.OrderBy(x => x.EntityId) : query.OrderByDescending(x => x.EntityId),
-                5 => request.SortDirection == "asc" ? query.OrderBy(x => x.Timestamp) : query.OrderByDescending(x => x.Timestamp),
-                _ => query.OrderByDescending(x => x.Timestamp)
+                0 => request.SortDirection == "asc" ? query.OrderBy(x => x.UserFullName) : query.OrderByDescending(x => x.UserFullName),
+                1 => request.SortDirection == "asc" ? query.OrderBy(x => x.Action) : query.OrderByDescending(x => x.Action),
+                2 => request.SortDirection == "asc" ? query.OrderBy(x => x.EntityName) : query.OrderByDescending(x => x.EntityName),
+                3 => request.SortDirection == "asc" ? query.OrderBy(x => x.EntityId) : query.OrderByDescending(x => x.EntityId),
+                4 => request.SortDirection == "asc" ? query.OrderBy(x => x.Timestamp) : query.OrderByDescending(x => x.Timestamp),
+                _ => query.OrderByDescending(x => x.Id)
             };
 
             var data = await query.Skip(request.Start).Take(request.Length).ToListAsync();
@@ -98,63 +82,24 @@ namespace dttbidsmxbb.Services
             {
                 var search = request.SearchValue.ToLower();
                 query = query.Where(x =>
-                    x.Username.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
-                    x.IpAddress.Contains(search));
+                    EF.Functions.Like(x.Username.ToLower(), $"%{search}%") ||
+                    EF.Functions.Like(x.IpAddress, $"%{search}%"));
             }
 
             var filteredCount = await query.CountAsync();
 
             query = request.SortColumnIndex switch
             {
-                0 => request.SortDirection == "asc" ? query.OrderBy(x => x.Id) : query.OrderByDescending(x => x.Id),
-                1 => request.SortDirection == "asc" ? query.OrderBy(x => x.Username) : query.OrderByDescending(x => x.Username),
-                2 => request.SortDirection == "asc" ? query.OrderBy(x => x.Success) : query.OrderByDescending(x => x.Success),
-                3 => request.SortDirection == "asc" ? query.OrderBy(x => x.IpAddress) : query.OrderByDescending(x => x.IpAddress),
-                4 => request.SortDirection == "asc" ? query.OrderBy(x => x.Timestamp) : query.OrderByDescending(x => x.Timestamp),
-                _ => query.OrderByDescending(x => x.Timestamp)
+                0 => request.SortDirection == "asc" ? query.OrderBy(x => x.Username) : query.OrderByDescending(x => x.Username),
+                1 => request.SortDirection == "asc" ? query.OrderBy(x => x.Success) : query.OrderByDescending(x => x.Success),
+                2 => request.SortDirection == "asc" ? query.OrderBy(x => x.IpAddress) : query.OrderByDescending(x => x.IpAddress),
+                3 => request.SortDirection == "asc" ? query.OrderBy(x => x.Timestamp) : query.OrderByDescending(x => x.Timestamp),
+                _ => query.OrderByDescending(x => x.Id)
             };
 
             var data = await query.Skip(request.Start).Take(request.Length).ToListAsync();
 
             return new DataTableResponse<AuthLog>
-            {
-                Draw = request.Draw,
-                RecordsTotal = totalCount,
-                RecordsFiltered = filteredCount,
-                Data = data
-            };
-        }
-
-        public async Task<DataTableResponse<EventLog>> GetEventLogsAsync(DataTableRequest request)
-        {
-            var query = db.EventLogs.AsNoTracking();
-            var totalCount = await query.CountAsync();
-
-            if (!string.IsNullOrEmpty(request.SearchValue))
-            {
-                var search = request.SearchValue.ToLower();
-                query = query.Where(x =>
-                    (x.UserFullName != null && x.UserFullName.Contains(search, StringComparison.CurrentCultureIgnoreCase)) ||
-                    x.Path.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
-                    x.Method.Contains(search, StringComparison.CurrentCultureIgnoreCase));
-            }
-
-            var filteredCount = await query.CountAsync();
-
-            query = request.SortColumnIndex switch
-            {
-                0 => request.SortDirection == "asc" ? query.OrderBy(x => x.Id) : query.OrderByDescending(x => x.Id),
-                1 => request.SortDirection == "asc" ? query.OrderBy(x => x.UserFullName) : query.OrderByDescending(x => x.UserFullName),
-                2 => request.SortDirection == "asc" ? query.OrderBy(x => x.Method) : query.OrderByDescending(x => x.Method),
-                3 => request.SortDirection == "asc" ? query.OrderBy(x => x.Path) : query.OrderByDescending(x => x.Path),
-                4 => request.SortDirection == "asc" ? query.OrderBy(x => x.StatusCode) : query.OrderByDescending(x => x.StatusCode),
-                5 => request.SortDirection == "asc" ? query.OrderBy(x => x.Timestamp) : query.OrderByDescending(x => x.Timestamp),
-                _ => query.OrderByDescending(x => x.Timestamp)
-            };
-
-            var data = await query.Skip(request.Start).Take(request.Length).ToListAsync();
-
-            return new DataTableResponse<EventLog>
             {
                 Draw = request.Draw,
                 RecordsTotal = totalCount,

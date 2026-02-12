@@ -1,5 +1,4 @@
 using dttbidsmxbb.Data;
-using dttbidsmxbb.Middleware;
 using dttbidsmxbb.Models;
 using dttbidsmxbb.Services;
 using Microsoft.AspNetCore.Identity;
@@ -63,7 +62,6 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<RequestLoggingMiddleware>();
 app.MapStaticAssets();
 app.MapControllerRoute(
     name: "default",
